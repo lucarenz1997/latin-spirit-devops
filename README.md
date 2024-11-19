@@ -1,5 +1,7 @@
 # Students Repository for HSLU Module "DevOps"
 
+This project is part of the **DevOps** course at the [Hochschule Luzern (HSLU)](https://www.hslu.ch/en/) as part of the [Master of Science in Applied Information and Data Science](https://www.hslu.ch/en/lucerne-school-of-business/degree-programmes/master/applied-information-and-data-science/)
+
 The following commands are all ment to be executed in the root directory of the project.
 
 ## Mac/Linux
