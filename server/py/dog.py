@@ -267,13 +267,13 @@ class Dog(Game):
         self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
 
 
-def get_player_view(self, idx_player: int) -> GameState:
-    """ Get the masked state for the active player (e.g. the opponent's cards are face down) """
-    masked_state = self._state.copy()
-    for i, player in enumerate(masked_state.list_player):
-        if i != idx_player:
-            player.list_card = [Card(suit='?', rank='?')] * len(player.list_card)
-    return masked_state
+    def get_player_view(self, idx_player: int) -> GameState:
+        """ Get the masked state for the active player (e.g. the opponent's cards are face down) """
+        masked_state = self._state.copy()
+        for i, player in enumerate(masked_state.list_player):
+            if i != idx_player:
+                player.list_card = [Card(suit='?', rank='?')] * len(player.list_card)
+        return masked_state
 
 
 class RandomPlayer(Player):
