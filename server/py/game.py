@@ -1,9 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import List, Any
 
-from server.py.dog import GameState
 
-# GameState = Any # TODO LATIN-13
+GameState = Any # TODO LATIN-13
 GameAction = Any # TODO not sure what to do with this. is it an enum of "TAKING OVER" ,etc? LATIN-14
 
 class Game(metaclass=ABCMeta):
