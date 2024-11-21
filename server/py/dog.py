@@ -28,8 +28,7 @@ class Action(BaseModel):
     card: Card  # card to play
     pos_from: Optional[int]  # position to move the marble from
     pos_to: Optional[int]  # position to move the marble to
-    card_swap: Optional[
-        Card]  # optional card to swap () # TODO what is this used for? is this even required for Brandi-Dog?!? LATIN-37
+    card_swap: Optional[Card]  # optional card to swap () # TODO what is this used for? is this even required for Brandi-Dog?!?
 
 
 class GamePhase(str, Enum):
@@ -37,8 +36,8 @@ class GamePhase(str, Enum):
     RUNNING = 'running'  # while the game is running
     FINISHED = 'finished'  # when the game is finished
 
-
 class GameState(BaseModel):
+
     LIST_SUIT: ClassVar[List[str]] = ['♠', '♥', '♦', '♣']  # 4 suits (colors)
     LIST_RANK: ClassVar[List[str]] = [
         '2', '3', '4', '5', '6', '7', '8', '9', '10',  # 13 ranks + Joker
