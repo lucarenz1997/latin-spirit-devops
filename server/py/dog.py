@@ -257,6 +257,7 @@ class Dog(Game):
             active_player.list_card.remove(action.card)
             self._state.list_id_card_discard.append(action.card)
 
+
             # Example logic to update the game state based on the action
             if action.pos_from is not None and action.pos_to is not None:
                 # TODO Move marble logic LATIN-38
@@ -275,7 +276,6 @@ class Dog(Game):
             if i != idx_player:
                 player.list_card = [Card(suit='?', rank='?')] * len(player.list_card)
         return masked_state
-
 
 class RandomPlayer(Player):
 
