@@ -192,6 +192,9 @@ class Dog(Game):
             if self._is_collision(int(action.pos_to), self._state.idx_player_active):
                 self._handle_collision(int(action.pos_to), self._state.idx_player_active)
 
+                # Update active player
+                self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
+
             # TODO Add more logic for other actions like sending marble home
             ## TODO LATIN -42 logic for check if game is over (define winners)
 
