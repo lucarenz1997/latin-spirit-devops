@@ -182,17 +182,23 @@ class Dog(Game):
             # removing card from players hand and putting it to discarded stack
             active_player.list_card.remove(action.card)
             self._state.list_card_discard.append(action.card)
+            # Find the marble being moved
             marble_to_move = next(
                 (marble for marble in active_player.list_marble if int(marble.pos) == int(action.pos_from)),
                 None
             )
-            self._move_marble_logic(marble_to_move, action.pos_to, action.card)
 
-            # TODO LATIN -46 check for collision
-            if self._is_collision(int(action.pos_to), self._state.idx_player_active):
-                self._handle_collision(int(action.pos_to), self._state.idx_player_active)
+            if marble_to_move:
+                # Check for collision before moving the marble
+                if self._is_collision(marble_to_move, action.pos_to, action.card):
+                    self._handle_collision(marble_to_move, action.pos_to)
 
-        # Update active player
+                # Perform the movement logic
+                self._move_marble_logic(marble_to_move, action.pos_to, action.card)
+
+            # TODO Add additional logic for special cases (e.g., sending marbles home, resolving specific card effects)
+
+            # Calculate the next player (after 4, comes 1 again)
         self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
 
             # TODO Add more logic for other actions like sending marble home
