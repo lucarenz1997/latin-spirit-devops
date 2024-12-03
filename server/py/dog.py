@@ -192,8 +192,8 @@ class Dog(Game):
             if self._is_collision(int(action.pos_to), self._state.idx_player_active):
                 self._handle_collision(int(action.pos_to), self._state.idx_player_active)
 
-                # Update active player
-                self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
+        # Update active player
+        self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
 
             # TODO Add more logic for other actions like sending marble home
             ## TODO LATIN -42 logic for check if game is over (define winners)
@@ -212,15 +212,42 @@ class Dog(Game):
         marble.pos = pos_to
 
 #Define is collision #TODO LATIN -45 create handle collision
-    def _is_collision(self, pos_to: int, active_player_index: int) -> bool:
+    def _is_collision(self, marble: Marble, pos_to: int, card: Card) -> bool:
         """
-        Check if moving to pos_to results in a collision with another marble.
+        Check if the movement of the marble using the card results in a collision.
+
+        Args:
+            marble (Marble): The marble being moved.
+            pos_to (int): The target position.
+            card (Card): The card being played.
+
+        Returns:
+            bool: True if the marble jumps over another marble, False otherwise.
         """
-        for player_index, player in enumerate(self._state.list_player):
-            if player_index != active_player_index:  # Don't check active player's own marbles
-                for marble in player.list_marble:
-                    if int(marble.pos) == pos_to and not marble.is_save:
-                        return True
+        pos_from = int(marble.pos)
+        total_steps = self.TOTAL_STEPS
+        marble_positions = {int(m.pos) for player in self._state.list_player for m in player.list_marble}
+
+        if card.rank == '7':
+            # Simulate all positions between pos_from and pos_to
+            steps = abs(pos_to - pos_from)
+            for step in range(1, steps + 1):
+                intermediate_pos = (pos_from + step) % total_steps
+                if intermediate_pos in marble_positions:
+                    return True
+
+        elif card.rank == '4':
+            # Similar logic, but account for reverse movement
+            if pos_to < pos_from:  # Handling wrap-around
+                pos_range = list(range(pos_from, total_steps)) + list(range(0, pos_to + 1))
+            else:
+                pos_range = list(range(pos_from, pos_to + 1))
+
+            for pos in pos_range:
+                if pos in marble_positions:
+                    return True
+
+        # Add additional checks for other cards with collision logic
         return False
 
     def _handle_collision(self, pos_to: int, active_player_index: int) -> None:
