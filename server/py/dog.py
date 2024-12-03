@@ -189,8 +189,9 @@ class Dog(Game):
             self._move_marble_logic(marble_to_move, action.pos_to, action.card)
 
             # TODO LATIN -46 check for collision
-            #if self._is_collision :
-            #self.handle_collision(....)
+            if self._is_collision(int(action.pos_to), self._state.idx_player_active):
+                self._handle_collision(int(action.pos_to), self._state.idx_player_active)
+
             # TODO Add more logic for other actions like sending marble home
             ## TODO LATIN -42 logic for check if game is over (define winners)
 
@@ -207,9 +208,31 @@ class Dog(Game):
         # Update marble position
         marble.pos = pos_to
 
-# Def is_collision()
-# self._handle_collision(marble, pos_to) #TODO LATIN -45 create handle collision
+#Define is collision #TODO LATIN -45 create handle collision
+    def _is_collision(self, pos_to: int, active_player_index: int) -> bool:
+        """
+        Check if moving to pos_to results in a collision with another marble.
+        """
+        for player_index, player in enumerate(self._state.list_player):
+            if player_index != active_player_index:  # Don't check active player's own marbles
+                for marble in player.list_marble:
+                    if int(marble.pos) == pos_to and not marble.is_save:
+                        return True
+        return False
 
+    def _handle_collision(self, pos_to: int, active_player_index: int) -> None:
+        """
+        Handle the collision by sending the marble back to its starting position.
+        """
+        for player_index, player in enumerate(self._state.list_player):
+            if player_index != active_player_index:  # Only consider other players' marbles
+                for marble in player.list_marble:
+                    if int(marble.pos) == pos_to and not marble.is_save:
+                        # Send the marble back to its queue start
+                        queue_start = self.PLAYER_POSITIONS[player_index]['queue_start']
+                        marble.pos = str(queue_start + player.list_marble.index(marble))  # Back to the queue
+                        marble.is_save = True
+                        print(f"Collision: Marble from Player {player_index + 1} sent back to the queue.")
 
     # TODO LATIN-28 check if logic is actually what we need it to be
     def get_player_view(self, idx_player: int) -> GameState:
