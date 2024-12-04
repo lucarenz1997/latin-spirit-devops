@@ -300,7 +300,11 @@ class Dog(Game):
         """
         Core logic for moving a marble to a new position.
         """
+        pos_from = int(marble.pos)
         pos_to = int(pos_to)  # Ensure the target position is an integer
+
+        # Handle overtaking logic
+        self._handle_overtaking(marble, pos_from, pos_to, card)
 
         # Update marble position
         marble.pos = pos_to
@@ -310,7 +314,6 @@ class Dog(Game):
     def _is_collision(self, marble: Marble, pos_to: int, card: Card) -> bool:
         """
         Check if the movement of the marble using the card results in a collision.
-        The SEVEN card has special handling where overtaken marbles are sent back to the kennel.
 
         Args:
             marble (Marble): The marble being moved.
@@ -328,51 +331,68 @@ class Dog(Game):
         active_player = self._state.list_player[self._state.idx_player_active]
         active_player_marbles = {int(m.pos) for m in active_player.list_marble}
 
-        # Exclude finished marbles from the collision logic
-        marbles_in_finish = {int(m.pos) for player in self._state.list_player for m in player.list_marble if
-                             m.in_finish_line}
-
         # If the marble is moving to a position occupied by its own start, do not count as a collision
         if pos_to in active_player_marbles and pos_to != marble.pos:
             return True
 
-        # Handling SEVEN card (whole or split)
         if card.rank == '7':
             # Simulate all positions between pos_from and pos_to
             steps = abs(pos_to - pos_from)
-            overtaken_marbles = set()  # To track which marbles have been overtaken and reset to the kennel
-
             for step in range(1, steps + 1):
                 intermediate_pos = (pos_from + step) % total_steps
-                # Only overtake if the position is not at the start or finish (since these marbles cannot be overtaken)
-                if intermediate_pos in marble_positions and intermediate_pos not in active_player_marbles and intermediate_pos not in marbles_in_finish:
-                    # If the intermediate position has a marble, we overtake and send it back to the kennel
-                    overtaken_marbles.add(intermediate_pos)
+                if intermediate_pos in marble_positions and intermediate_pos not in active_player_marbles:
+                    return True
 
-            # If any marbles were overtaken, they need to be sent back to the kennel
-            if overtaken_marbles:
-                for pos in overtaken_marbles:
-                    self._reset_marble_to_kennel(pos)
-
-            # No collision occurs when moving with a split or whole SEVEN
-            return False
-
-        # Handling for the 4 card (reverse movement)
         elif card.rank == '4':
-            # Handle reverse movement with wrap-around logic
-            if pos_to < pos_from:  # Moving backward (handling wrap-around)
+            # Similar logic, but account for reverse movement
+            if pos_to < pos_from:  # Handling wrap-around
                 pos_range = list(range(pos_from, total_steps)) + list(range(0, pos_to + 1))
             else:
                 pos_range = list(range(pos_from, pos_to + 1))
 
-            # Check for collisions with marbles
             for pos in pos_range:
-                if pos in marble_positions and pos not in active_player_marbles and pos not in marbles_in_finish:
+                if pos in marble_positions and pos not in active_player_marbles:
                     return True
 
-        # For all other cards, overtaking is allowed without consequences
-        # We do not need to return True or False based on overtaking alone unless using the SEVEN card
+        # Add additional checks for other cards with collision logic
         return False
+
+    def _handle_overtaking(self, marble: Marble, pos_from: int, pos_to: int, card: Card) -> None:
+        # Handle the logic for overtaking marbles during a move.
+
+        total_steps = self.TOTAL_STEPS  # Total positions on the board
+        marble_positions = {
+            int(m.pos): m
+            for player in self._state.list_player
+            for m in player.list_marble
+        }
+        active_player = self._state.list_player[self._state.idx_player_active]
+        active_player_positions = {int(m.pos) for m in active_player.list_marble}
+
+        overtaken_marbles = set()
+
+        # Check the range of positions between pos_from and pos_to
+        if pos_to > pos_from:
+            path = range(pos_from + 1, pos_to + 1)  # Regular forward movement
+        else:
+            path = list(range(pos_from + 1, total_steps)) + list(range(0, pos_to + 1))  # Wrap-around movement
+
+        for step in path:
+            position = step % total_steps
+            if position in marble_positions and position not in active_player_positions:
+                overtaken_marbles.add(marble_positions[position])
+
+        # Handle overtaken marbles based on card rules
+        if card.rank == '7':  # Special SEVEN card handling
+            for overtaken_marble in overtaken_marbles:
+                self._reset_marble_to_kennel(overtaken_marble)
+        else:
+            # For other cards, overtaking may not require special handling
+            pass
+
+    def _reset_marble_to_kennel(self, marble: Marble) -> None:
+        marble.pos = marble.start_pos  # Reset to its starting position
+        marble.in_kennel = True
 
     # TODO LATIN-28 check if logic is actually what we need it to be
 
