@@ -234,12 +234,20 @@ class Dog(Game):
         total_steps = self.TOTAL_STEPS
         marble_positions = {int(m.pos) for player in self._state.list_player for m in player.list_marble}
 
+        # Exclude the active player's marbles from the collision check for the start marble
+        active_player = self._state.list_player[self._state.idx_player_active]
+        active_player_marbles = {int(m.pos) for m in active_player.list_marble}
+
+        # If the marble is moving to a position occupied by its own start, do not count as a collision
+        if pos_to in active_player_marbles and pos_to != marble.pos:
+            return True
+
         if card.rank == '7':
             # Simulate all positions between pos_from and pos_to
             steps = abs(pos_to - pos_from)
             for step in range(1, steps + 1):
                 intermediate_pos = (pos_from + step) % total_steps
-                if intermediate_pos in marble_positions:
+                if intermediate_pos in marble_positions and intermediate_pos not in active_player_marbles:
                     return True
 
         elif card.rank == '4':
@@ -250,7 +258,7 @@ class Dog(Game):
                 pos_range = list(range(pos_from, pos_to + 1))
 
             for pos in pos_range:
-                if pos in marble_positions:
+                if pos in marble_positions and pos not in active_player_marbles:
                     return True
 
         # Add additional checks for other cards with collision logic
