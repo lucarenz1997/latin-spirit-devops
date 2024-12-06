@@ -508,8 +508,6 @@ class Dog(Game):
 
         # Check if the target position is occupied by a marble
         for player_index, player in enumerate(self._state.list_player):
-            # if player == active_player:
-            #     continue  # Skip the active player's marbles
 
             for other_marble in player.list_marble:
                 if other_marble.pos == pos_to:
