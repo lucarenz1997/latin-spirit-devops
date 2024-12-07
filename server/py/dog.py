@@ -195,15 +195,20 @@ class Dog(Game):
             return random.choice(player.list_card)  # Randomly select a card to swap
         return None
 
+    transformed_joker_card = None
     def get_list_action(self) -> List[Action]:
         """ Get a list of possible actions for the active player """
         actions = []
         unique_actions = []
         to_positions = []
+
         active_player = self._state.list_player[self._state.idx_player_active]
 
         marbles_in_kennel = self._count_marbles_in_kennel()
-        for card in active_player.list_card:
+        cards = active_player.list_card
+        if self.transformed_joker_card is not None:
+            cards :list[Card]= [self.transformed_joker_card]
+        for card in cards:
             for marble in active_player.list_marble:
                 # TODO Go through all cards and marbles and return the possible positions.
 
@@ -397,7 +402,7 @@ class Dog(Game):
                         to_positions.append(pos_one_forward)
 
                     if card.rank == 'JKR':
-                    # Add Joker transformations for all other possible cards
+                        # Add Joker transformations for all other possible cards
 
                         for rank in GameState.LIST_RANK:
                             if rank != 'JKR':  # Exclude the Joker itself
@@ -477,14 +482,24 @@ class Dog(Game):
         """ Apply the given action to the game """
         active_player = self._state.list_player[self._state.idx_player_active]
         self._handle_none_action(action, active_player)
-
         if action is not None and action.card in active_player.list_card:
-            self._state.card_active = action.card
+            card_to_apply = action.card
+            if action.card_swap is not None:
+                card_to_apply = action.card_swap
+                active_player.list_card.append(card_to_apply)
+                active_player.list_card.remove(action.card)
+                self.transformed_joker_card = action.card_swap
+                self._state.list_card_discard.append(action.card)
+                self._state.card_active = card_to_apply
+                return
+            else:
+                self.transformed_joker_card = None
+            self._state.card_active = card_to_apply
             # removing card from players hand and putting it to discarded stack
             active_player.list_card.remove(action.card)
             self._state.list_card_discard.append(action.card)
 
-            if action.card.rank == 'J':
+            if action.card.rank == 'J' or (action.card_swap is not None and action.card_swap.rank == 'J'):
                 self._swap_marbles(action)
             else:
                 # Find the marble being moved
