@@ -1,7 +1,5 @@
 import random
 from enum import Enum
-
-from server.py.game import Game, Player
 from typing import List, Optional, ClassVar
 
 from pydantic import BaseModel
@@ -159,7 +157,7 @@ class Dog(Game):
 
     def get_state(self) -> GameState:
         """ Get the complete, unmasked game state """
-        return self._state #type: ignore
+        return self._state  # type: ignore
 
     def print_state(self) -> None:
         """ Print the current game state """
@@ -230,20 +228,47 @@ class Dog(Game):
 
                                 # Handle JOKER acting as ACE or KING
                                 if card.rank == 'JKR':
-                                    # As Ace
+
+
+                                    # Joker acting as Ace
                                     actions.append(Action(
                                         card=card,
-                                        pos_from=marble.pos,
-                                        pos_to=start_position,
-                                        card_swap=Card(suit='♥', rank='A')  # JKR acting as Ace
+                                        pos_from=None,
+                                        pos_to=None,
+                                        card_swap=Card(suit='♥', rank='A')
                                     ))
-                                    # As King
+                                    # Joker acting as King
                                     actions.append(Action(
                                         card=card,
-                                        pos_from=marble.pos,
-                                        pos_to=start_position,
-                                        card_swap=Card(suit='♥', rank='K')  # JKR acting as King
+                                        pos_from=None,
+                                        pos_to=None,
+                                        card_swap=Card(suit='♥', rank='K')
                                     ))
+
+                                        # Add Joker transformations for all other possible cards
+                                    # for suit in GameState.LIST_SUIT:
+                                    #     for rank in GameState.LIST_RANK:
+                                    #         if rank != 'JKR':  # Exclude the Joker itself
+                                    #             actions.append(Action(
+                                    #                 card=card,
+                                    #                 pos_from=None,
+                                    #                 pos_to=None,
+                                    #                 card_swap=Card(suit=suit, rank=rank)
+                                    #             ))
+                                    # # As Ace
+                                    # actions.append(Action(
+                                    #     card=card,
+                                    #     pos_from=None,
+                                    #     pos_to=None,
+                                    #     card_swap=Card(suit='♥', rank='A')  # JKR acting as Ace
+                                    # ))
+                                    # # As King
+                                    # actions.append(Action(
+                                    #     card=card,
+                                    #     pos_from=None,
+                                    #     pos_to=None,
+                                    #     card_swap=Card(suit='♥', rank='K')  # JKR acting as King
+                                    # ))
                 else:
                     if card.rank.isdigit() and card.rank not in ['7', '4']:
                         to_positions = self._calculate_position_to(
@@ -366,7 +391,6 @@ class Dog(Game):
                                         card_swap=None
                                     ))  # CHANGE: Allow both directions of swaps
 
-
                     if card.rank == 'K':
                         # Move 13 spots forward
                         pos_one_forward = (marble.pos + 13) % self.TOTAL_STEPS
@@ -380,8 +404,6 @@ class Dog(Game):
                         if marble.pos < queue_start and pos_one_forward >= queue_start:
                             pos_one_forward = final_start + (pos_one_forward - queue_start) - 1
                         to_positions.append(pos_one_forward)
-
-
 
                     # checks for each possible position if the way is blocked. if it is not blocked, we add it to action.
                     for pos_to in to_positions:
@@ -469,11 +491,12 @@ class Dog(Game):
 
                 if marble_to_move:
                     # Check for collision before moving the marble
-                    if self._is_collision(marble=marble_to_move, pos_to=action.pos_to, card=action.card): #type: ignore
-                        self._handle_collision(action=action) #type: ignore
+                    if self._is_collision(marble=marble_to_move, pos_to=action.pos_to,
+                                          card=action.card):  # type: ignore
+                        self._handle_collision(action=action)  # type: ignore
 
                     # Perform the movement logic
-                    self._move_marble_logic(marble_to_move, action.pos_to, action.card)  #type: ignore
+                    self._move_marble_logic(marble_to_move, action.pos_to, action.card)  # type: ignore
 
         if self._check_team_win():
             self._state.phase = self._state.phase.FINISHED
@@ -494,7 +517,7 @@ class Dog(Game):
             for p in self._state.list_player:
                 p.list_card = []
 
-    def _handle_none_action(self, action:Action, active_player:PlayerState) -> None:
+    def _handle_none_action(self, action: Action, active_player: PlayerState) -> None:
         if action is None:
             self.none_actions_counter += 1
             active_player.list_card = []
@@ -587,7 +610,6 @@ class Dog(Game):
                     print(f"Collision: Marble from Player {player_index + 1} sent back to the queue.")
                     return
 
-
     # TODO LATIN-28 check if logic is actually what we need it to be
 
     def get_player_view(self, idx_player: int) -> GameState:
@@ -658,7 +680,8 @@ class Dog(Game):
 
         return possible_positions
 
-    def _is_valid_move_in_final_area(self, pos_from:int , pos_to:int, marbles:list[Marble], final_area_start:int, final_area_end:int) -> bool:
+    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int,
+                                     final_area_end: int) -> bool:
         """
         Validates whether a move in the final area is legal based on game rules.
         Marbles cannot jump over other marbles in the final area.
