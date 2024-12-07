@@ -245,16 +245,7 @@ class Dog(Game):
                                         card_swap=Card(suit='♥', rank='K')
                                     ))
 
-                                        # Add Joker transformations for all other possible cards
-                                    # for suit in GameState.LIST_SUIT:
-                                    #     for rank in GameState.LIST_RANK:
-                                    #         if rank != 'JKR':  # Exclude the Joker itself
-                                    #             actions.append(Action(
-                                    #                 card=card,
-                                    #                 pos_from=None,
-                                    #                 pos_to=None,
-                                    #                 card_swap=Card(suit=suit, rank=rank)
-                                    #             ))
+
                                     # # As Ace
                                     # actions.append(Action(
                                     #     card=card,
@@ -405,6 +396,18 @@ class Dog(Game):
                             pos_one_forward = final_start + (pos_one_forward - queue_start) - 1
                         to_positions.append(pos_one_forward)
 
+                    if card.rank == 'JKR':
+                    # Add Joker transformations for all other possible cards
+
+                        for rank in GameState.LIST_RANK:
+                            if rank != 'JKR':  # Exclude the Joker itself
+                                actions.append(Action(
+                                    card=card,
+                                    pos_from=None,
+                                    pos_to=None,
+                                    card_swap=Card(suit='♥', rank=rank)
+                                ))
+
                     # checks for each possible position if the way is blocked. if it is not blocked, we add it to action.
                     for pos_to in to_positions:
                         if not self._is_way_blocked(
@@ -476,6 +479,7 @@ class Dog(Game):
         self._handle_none_action(action, active_player)
 
         if action is not None and action.card in active_player.list_card:
+            self._state.card_active = action.card
             # removing card from players hand and putting it to discarded stack
             active_player.list_card.remove(action.card)
             self._state.list_card_discard.append(action.card)
