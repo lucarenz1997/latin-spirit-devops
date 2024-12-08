@@ -11,6 +11,10 @@ class Card(BaseModel):
     suit: str  # card suit (color)
     rank: str  # card rank
 
+    def __lt__(self, card) -> bool:
+        return self.suit < card.suit or \
+            self.rank < card.rank
+
 
 class Marble(BaseModel):
     pos: int  # position on board (0 to 95)
