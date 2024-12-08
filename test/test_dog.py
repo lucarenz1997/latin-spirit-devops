@@ -16,7 +16,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 
-from server.py.dog import Card, Marble, PlayerState, Action, GameState, GamePhase, Dog
+from server.py.dog import Card, Marble, PlayerState, Action, GameState, GamePhase, Dog, RandomPlayer
 
 import coverage
 import pytest

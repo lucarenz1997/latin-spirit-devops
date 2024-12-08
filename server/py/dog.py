@@ -177,7 +177,7 @@ class Dog(Game):
     transformed_joker_card = None
     active_player_has_finished = False
 
-    def get_list_action(self) -> List[Action]:
+    def get_list_action(self) -> List[Action]: # pylint: disable=too-many-locals, too-many-statements
         """ Get a list of possible actions for the active player """
         actions = []
         unique_actions = []
@@ -216,7 +216,7 @@ class Dog(Game):
             actions_for_player_with_marbles_to_check = self._state.idx_player_active
             self.active_player_has_finished = False
 
-        for card in cards:
+        for card in cards: # pylint: disable=too-many-nested-blocks
             for marble in marbles_to_check:
 
                 queue_start = self.PLAYER_POSITIONS[actions_for_player_with_marbles_to_check]['queue_start']
@@ -261,21 +261,14 @@ class Dog(Game):
 
                     if card.rank == '7' or (self._state.card_active and self._state.card_active.rank == '7'):
 
-                        actions.extend(self._generate_seven_actions(marbles_to_check, card))
+                        actions.extend(self._generate_seven_actions(marbles_to_check)) # remove card as param
 
                     if card.rank == 'A':
                         # Move 1 spot forward
-                        pos_one_forward = (marble.pos + 1) % self.TOTAL_STEPS
-                        if marble.pos < queue_start:
-                            if pos_one_forward >= queue_start:
-                                pos_one_forward = final_start + (pos_one_forward - queue_start) - 1
-                        to_positions.append(pos_one_forward)
+                        to_positions.append(self._move_n_forward(marble, 1, queue_start, final_start))
 
                         # Move 11 spots forward
-                        pos_eleven_forward = (marble.pos + 11) % self.TOTAL_STEPS
-                        if marble.pos < queue_start and pos_eleven_forward >= queue_start:
-                            pos_eleven_forward = final_start + (pos_eleven_forward - queue_start) - 1
-                        to_positions.append(pos_eleven_forward)
+                        to_positions.append(self._move_n_forward(marble, 11, queue_start, final_start))
 
                         # Validate positions are not blocked or the move is not valid
                         valid_positions = []
@@ -295,7 +288,7 @@ class Dog(Game):
                     if card.rank == '4':
                         # Forward movement (+4)
                         next_position = (marble.pos + 4) % self.TOTAL_STEPS
-                        if marble.pos < queue_start and next_position >= queue_start:
+                        if marble.pos < queue_start and next_position >= queue_start: # pylint: disable=chained-comparison
                             next_position = final_start + (next_position - queue_start) - 1
 
                         if self._is_valid_move_in_final_area(marble.pos, next_position, marbles_to_check,
@@ -306,7 +299,7 @@ class Dog(Game):
                         # Backward movement (-4)
                         next_position = self.TOTAL_STEPS - 4 \
                             if marble.pos == 0 else (marble.pos - 4) % self.TOTAL_STEPS
-                        if marble.pos < queue_start and next_position >= queue_start:
+                        if marble.pos < queue_start and next_position >= queue_start: # pylint: disable=chained-comparison
                             next_position = final_start + (next_position - queue_start) - 1
 
                         if self._is_valid_move_in_final_area(marble.pos, next_position, marbles_to_check,
@@ -377,18 +370,11 @@ class Dog(Game):
                                     ))  # CHANGE: Allow both directions of swaps
 
                     if card.rank == 'K':
-                        # Move 13 spots forward
-                        pos_one_forward = (marble.pos + 13) % self.TOTAL_STEPS
-                        if marble.pos < queue_start and pos_one_forward >= queue_start:
-                            pos_one_forward = final_start + (pos_one_forward - queue_start) - 1
-                        to_positions.append(pos_one_forward)
+                        to_positions.append(self._move_n_forward(marble, 13, queue_start, final_start))
+
 
                     if card.rank == 'Q':
-                        # Move 12 spots forward
-                        pos_one_forward = (marble.pos + 12) % self.TOTAL_STEPS
-                        if marble.pos < queue_start and pos_one_forward >= queue_start:
-                            pos_one_forward = final_start + (pos_one_forward - queue_start) - 1
-                        to_positions.append(pos_one_forward)
+                        to_positions.append(self._move_n_forward(marble, 12, queue_start, final_start))
 
                     if card.rank == 'JKR':
                         # Add Joker transformations for all other possible cards
@@ -434,8 +420,8 @@ class Dog(Game):
             for player_idx in players:
                 final_start = self.PLAYER_POSITIONS[player_idx]['final_start']
                 final_positions = range(final_start, final_start + 4)
-                player = self._state.list_player[player_idx]
-                if not all(marble.pos in final_positions for marble in player.list_marble):
+                current_player = self._state.list_player[player_idx]
+                if not all(marble.pos in final_positions for marble in current_player.list_marble):
                     team_wins = False
                     break
 
@@ -450,7 +436,7 @@ class Dog(Game):
     none_actions_counter = 0
     card_exchanges_counter = 0
 
-    def apply_action(self, action: Action) -> None:
+    def apply_action(self, action: Action) -> None: # pylint: disable=too-many-locals, too-many-statements, redefined-outer-name
         """ Apply the given action to the game """
         active_player = self._state.list_player[self._state.idx_player_active]
 
@@ -472,7 +458,7 @@ class Dog(Game):
                             self._reset_to_kennel(reset_marble)
 
                         # Move the active player's marble to its new position
-                        self._move_marble_logic(marble_to_move, action.pos_to, action.card,
+                        self._move_marble_logic(marble_to_move, action.pos_to,
                                                 is_player_finished=self.active_player_has_finished)
 
             # card exchange with partner
@@ -500,14 +486,15 @@ class Dog(Game):
                 self._state.list_card_discard.append(action.card)
                 self._state.card_active = card_to_apply
                 return
-            else:
-                self.transformed_joker_card = None
+
+            self.transformed_joker_card = None
             self._state.card_active = card_to_apply
             # removing card from players hand and putting it to discarded stack
             active_player.list_card.remove(action.card)
             self._state.list_card_discard.append(action.card)
 
-            if action.card.rank == 'J' or (action.card_swap is not None and action.card_swap.rank == 'J'):
+            if (action.card.rank == 'J' or
+                    (action.card_swap is not None and action.card_swap.rank == 'J')):
                 self._swap_marbles(action)
             else:
                 if self.active_player_has_finished:
@@ -528,8 +515,8 @@ class Dog(Game):
                             self._handle_collision(current_action=action)
 
                     # Perform the movement logic
-                    self._move_marble_logic(marble_to_move, action.pos_to,
-                                            action.card, self.active_player_has_finished)  # type: ignore
+                    self._move_marble_logic(
+                        marble_to_move, action.pos_to, self.active_player_has_finished)  # type: ignore
 
         if self._check_team_win():
             self._state.phase = self._state.phase.FINISHED
@@ -551,12 +538,12 @@ class Dog(Game):
             for p in self._state.list_player:
                 p.list_card = []
 
-    def _handle_none_action(self, action: Action, active_player: PlayerState) -> None:
-        if action is None:
+    def _handle_none_action(self, current_action: Action, active_player: PlayerState) -> None:
+        if current_action is None:
             self.none_actions_counter += 1
             active_player.list_card = []
 
-    def _move_marble_logic(self, marble: Marble, pos_to: int, card: Card, is_player_finished: bool) -> None:
+    def _move_marble_logic(self, marble: Marble, pos_to: int, is_player_finished: bool) -> None:
         """
         Core logic for moving a marble to a new position.
         """
@@ -591,13 +578,8 @@ class Dog(Game):
         Returns:
             bool: True if the marble jumps over another marble, False otherwise.
         """
-
-        # simple logic if card is not 7!
-        active_player = self._state.list_player[self._state.idx_player_active]
-        active_player_marbles = {m.pos for m in active_player.list_marble}
-
         # Check if the target position is occupied by a marble
-        for player_index, current_player in enumerate(self._state.list_player):
+        for current_player in self._state.list_player:
 
             for other_marble in current_player.list_marble:
                 if other_marble.pos == pos_to:
@@ -645,13 +627,13 @@ class Dog(Game):
         """
         Handle the collision by sending the marble back to its starting position.
         """
-        for player_index, player in enumerate(self._state.list_player):
-            for marble in player.list_marble:
+        for player_index, current_player in enumerate(self._state.list_player):
+            for marble in current_player.list_marble:
                 # print(f"Checking marble at pos {marble.pos} against action.pos_to {action.pos_to}")
                 if marble.pos == current_action.pos_to and not marble.is_save:
                     # Send the marble back to its queue start
                     queue_start = self.PLAYER_POSITIONS[player_index]['queue_start']
-                    marble.pos = queue_start + player.list_marble.index(marble)  # Back to the queue
+                    marble.pos = queue_start + current_player.list_marble.index(marble)  # Back to the queue
                     marble.is_save = True
                     print(f"Collision: Marble from Player {player_index + 1} sent back to the queue.")
                     return
@@ -715,14 +697,15 @@ class Dog(Game):
         next_position = (pos_from + int(card.rank)) % self.TOTAL_STEPS
 
         # Checking if the player is crossing his "start"
-        if pos_from < queue_start and next_position >= queue_start:
-            next_position = final_start + (next_position - queue_start) - 1
+        if pos_from < queue_start:
+            if next_position >= queue_start:
+                next_position = final_start + (next_position - queue_start) - 1
 
         possible_positions.append(next_position)
 
         return possible_positions
 
-    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int,
+    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments
                                      final_area_end: int) -> bool: # pylint: disable=too-many-arguments
         """
         Validates whether a move in the final area is legal based on game rules.
@@ -764,13 +747,13 @@ class Dog(Game):
                 current_player.list_card.append(card)
 
     def _set_marbles(self) -> None:
-        for player_index in range(len(self._state.list_player)):
+        for player_index, current_player in enumerate(self._state.list_player):
             for marble_index in range(4):
-                self._state.list_player[player_index].list_marble.append(
+                current_player.list_marble.append(
                     Marble(
-                        pos=
-                        int(self.PLAYER_POSITIONS[player_index]['queue_start'] + marble_index),
-                        is_save=True)
+                        pos=int(self.PLAYER_POSITIONS[player_index]['queue_start'] + marble_index),
+                        is_save=True
+                    )
                 )
 
     def _swap_marbles(self, chosen_action: Action) -> None:
@@ -784,8 +767,8 @@ class Dog(Game):
         marble_to = None
 
         # Find the marble at pos_from and pos_to
-        for player in self._state.list_player:
-            for marble in player.list_marble:
+        for current_player in self._state.list_player:
+            for marble in current_player.list_marble:
                 if marble.pos == chosen_action.pos_from:
                     marble_from = marble
                 elif marble.pos == chosen_action.pos_to:
@@ -801,7 +784,7 @@ class Dog(Game):
         if marble_from and marble_to:
             marble_from.pos, marble_to.pos = marble_to.pos, marble_from.pos
 
-    def _generate_seven_actions(self, marbles: List[Marble], card: Card) -> List[Action]:
+    def _generate_seven_actions(self, marbles: List[Marble]) -> List[Action]:
         """Generate all possible combinations of moves for card rank 7."""
         possible_actions: list[Action] = []
 
@@ -844,8 +827,14 @@ class Dog(Game):
         # recurse(marbles, 7, [])
         return possible_actions
 
+    def _move_n_forward(self, marble: Marble, steps: int, queue_start: int, final_start: int) -> int:
+        pos = (marble.pos + steps) % self.TOTAL_STEPS
+        if marble.pos < queue_start and pos >= queue_start:  # pylint: disable=chained-comparison
+            pos = final_start + (pos - queue_start) - 1
+        return pos
 
-class RandomPlayer(Player):
+
+class RandomPlayer(Player): # pylint: disable=too-few-public-methods)
 
     def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]:
         """ Given masked game state and possible actions, select the next action """
