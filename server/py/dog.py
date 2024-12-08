@@ -164,6 +164,7 @@ class Dog(Game):
         """ Get a list of possible actions for the active player """
         actions = []
         to_positions = []
+        unique_actions = []
         active_player = self._state.list_player[self._state.idx_player_active]
         marbles_in_kennel = self._count_marbles_in_kennel()
         for card in active_player.list_card:
@@ -191,10 +192,14 @@ class Dog(Game):
                             marble.pos, card, self._state.idx_player_active)
 
                     # TODO Add more logic for all the other cards LATIN-35
-                    if card.rank == '7':
-                        # can be split into multiple marbles. if takes over, reset other marble
-                        # to_positions = ...
-                        pass
+                        if card.rank == '7':
+                            # Check if the player can play all 7 steps
+                            possible_positions = self._calculate_positions_for_7(active_player)
+                            if not possible_positions:
+                                return []  # No actions if the player can't move all steps
+                            to_positions = possible_positions
+
+                        return actions
 
                     # checks for each possible position if the way is blocked. if it is not blocked, we add it to action.
                     for pos_to in to_positions:
@@ -203,12 +208,48 @@ class Dog(Game):
                             # TODO add logic for card_swap (once we know what this is used for) LATIN-37
                             actions.append(Action(card=card, pos_from=marble.pos, pos_to=pos_to,
                                                   card_swap=None))
-            unique_actions = []
             for action in actions:
                 if action not in unique_actions:
                     unique_actions.append(action)
 
         return unique_actions
+
+    def _handle_card_seven(self, active_player: PlayerState, card: Card) -> List[Action]:
+        """
+        Handle logic for card 7: Split moves across multiple marbles.
+        """
+        possible_actions = []
+        marbles = active_player.list_marble
+        max_steps = 7
+        # Loop through each marble and attempt to make a valid move with '7'
+        for marble in marbles:
+            current_position = marble.pos
+
+            # Check if the marble is in a valid position to move
+            if current_position > 0:  # Ensure the marble is not in the start position
+                possible_positions = self._calculate_positions_for_7(active_player, marble)
+
+                # Check if the marble can move across 7 steps
+                for pos_to in possible_positions:
+                    if not self._is_way_blocked(pos_to, current_position, self._get_all_safe_marbles()):
+                        # If the way is not blocked, add the action
+                        possible_actions.append(
+                            Action(card=card, pos_from=current_position, pos_to=pos_to, card_swap=None))
+
+        return possible_actions
+
+    def _calculate_positions_for_7(self, active_player: PlayerState, marble: Marble) -> List[int]:
+        """
+        Calculate the possible positions for a '7' card based on the marble's current position.
+        """
+        positions = []
+        current_position = marble.pos
+        for step in range(1, 8):  # The 7 card can move up to 7 steps
+            next_position = current_position + step
+            # Add the position to the list if it's valid (and not blocked)
+            if self._is_valid_position(next_position):
+                positions.append(next_position)
+        return positions
 
     def _count_marbles_in_kennel(self) -> int:
         active_player = self._state.list_player[self._state.idx_player_active]
@@ -266,48 +307,100 @@ class Dog(Game):
         return False
 
     # TODO LATIN-27
-    def apply_action(self, action: Action) -> None:
-        if action == None:
+    def apply_action(self, action: Optional[Action]) -> None:
+        if action is None:
+            # If no action is provided and a 7-card was active, end the player's turn
+            if self._state.card_active and self._state.card_active.rank == '7':
+                print("Resetting card_active as no further moves are possible.")
+                self._state.card_active = None
+                self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
             return
-        """ Apply the given action to the game """
+
+        # Get the active player
         active_player = self._state.list_player[self._state.idx_player_active]
 
-        if action.card in active_player.list_card:
-            # removing card from players hand and putting it to discarded stack
+        # Ensure the card being played matches the active card (if one is set)
+        if self._state.card_active:
+            if self._state.card_active.rank != action.card.rank:
+                raise ValueError("Only actions for the active card are allowed.")
+        else:
+            # Set the card_active if it's a 7-card being played for the first time
+            if action.card.rank == '7':
+                self._state.card_active = action.card
+
+        # Check if the player has the card they're trying to play
+        if action.card not in active_player.list_card:
+            raise ValueError("Player does not have the card being played.")
+
+        # Remove the card from the player's hand and add it to the discard pile
+        if not self._state.card_active:
             active_player.list_card.remove(action.card)
             self._state.list_card_discard.append(action.card)
-            marble_to_move = next(
-                (marble for marble in active_player.list_marble if int(
-                    marble.pos) == int(action.pos_from)),
-                None
-            )
-            self._move_marble_logic(marble_to_move, action.pos_to, action.card)
-            # Check if the game is finished
-            if self._check_finish_game():
-                return  # Exit if the game is finished
+
+        # Perform the marble move
+        marble_to_move = next(
+            (marble for marble in active_player.list_marble if marble.pos == action.pos_from),
+            None
+        )
+        if marble_to_move is None:
+            raise ValueError("No marble at the starting position.")
+
+        self._move_marble_logic(marble_to_move, action.pos_to, action.card)
+
+        # Handle special behavior for the SEVEN card
+        if action.card.rank == '7':
+            # Calculate remaining steps
+            steps_used = abs(action.pos_to - action.pos_from)
+            remaining_steps = 7 - steps_used
+
+            if remaining_steps > 0:
+                print(f"Remaining steps for card 7: {remaining_steps}")
+                # Keep card_active if there are steps left
+                self._state.card_active = action.card
+            else:
+                # Reset card_active if all steps are used
+                self._state.card_active = None
+        else:
+            # Reset card_active for non-7 cards
+            self._state.card_active = None
+
+        # End the turn if the 7-card is fully used or if it's not a 7-card
+        if self._state.card_active is None:
+            self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
+
+        # Check if the game is finished
+        if self._check_finish_game():
+            self._state.phase = GamePhase.FINISHED
+
+            # Additional game logic (collisions, game finish checks, etc.)
             # TODO LATIN -46 check for collision
             # if self._is_collision :
             # self.handle_collision(....)
             # TODO Add more logic for other actions like sending marble home
             # TODO LATIN -42 logic for check if game is over (define winners)
 
-        # calculate the next player (after 4, comes 1 again). not sure if needed here or somewhere else
-        # example: (4+1)%4=1 -> after player 4, it's player 1's turn again
-        self._state.idx_player_active = (
-                                                self._state.idx_player_active + 1) % self._state.cnt_player
-
-    def _move_marble_logic(self, marble: Marble, pos_to: int, card: Card) -> None:
+    def _move_marble_logic(self, marble_to_move: Marble, pos_to: int, card: Card) -> None:
         """
-        Core logic for moving a marble to a new position.
+        Handle the logic for moving a marble on the board, including kicking out marbles
+        (even if they belong to the same player).
         """
-        pos_from = int(marble.pos)
-        pos_to = int(pos_to)  # Ensure the target position is an integer
+        # Get the active player
+        active_player = self._state.list_player[self._state.idx_player_active]
 
-        # Handle overtaking logic
-        self._handle_overtaking(marble, pos_from, pos_to, card)
+        # Check if the destination position has another marble
+        overtaken_marble = next(
+            (marble for marble in self._state.list_player[self._state.idx_player_active].list_marble
+             if marble.pos == pos_to),
+            None
+        )
 
-        # Update marble position
-        marble.pos = pos_to
+        if overtaken_marble:
+            # Marble overtaking logic applies even to own marbles
+            print(f"Marble at position {pos_to} is being overtaken.")
+            overtaken_marble.pos = None  # Send the overtaken marble back to the kennel
+
+        # Move the marble
+        marble_to_move.pos = pos_to
 
     # Def is_collision()
     # self._handle_collision(marble, pos_to) #TODO LATIN -45 create handle collision
@@ -482,11 +575,32 @@ class Dog(Game):
             possible_positions.append(next_position)
 
         elif card.rank == '7':
-            # TODO add logic
-            # remember that if you overtake with this card, the marble which was overtaken will be sent back to kennel.
-            # even your own marbles?
-            # cannot overtake blocked fields
-            pass
+        # Step 1: Calculate the new position after moving 7 steps
+            next_position = (pos_from + 7) % self.TOTAL_STEPS
+
+        # Step 2: Handle crossing "start" logic
+            if pos_from < queue_start and next_position >= queue_start:
+                next_position = final_start + (next_position - queue_start) - 1
+
+        # Step 3: Check if the player is overtaking any marbles
+            marbles_in_path = self.get_marbles_in_path(pos_from, next_position, active_player_indx)
+
+        # Step 4: Send overtaken marbles back to the kennel
+            for marble in marbles_in_path:
+                if marble.owner != active_player_indx:
+                    self.send_marble_back_to_kennel(marble)
+
+        # Step 5: Ensure that blocked fields are respected
+            blocked_fields = self.get_blocked_fields_between(pos_from, next_position)
+            if blocked_fields:
+            # Adjust the position around blocked fields
+                next_position = self.adjust_position_around_blocked_fields(next_position, blocked_fields)
+
+        # Step 6: Ensure the next position doesn't exceed the finish line
+            if next_position >= self.TOTAL_STEPS:
+                next_position = self.TOTAL_STEPS - 1
+
+            possible_positions.append(next_position)
 
         elif card.rank == 'J':
             # TODO add logic
