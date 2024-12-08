@@ -35,8 +35,13 @@ class TestDogBenchmark:
 
     def test_Card_class(self):
         """Test 002: Validate Card class [1 points]"""
-        card = Card(suit='hearts', rank='A')
-        assert isinstance(card, Card), f'{card}Error: Card class must be defined'
+        card1 = Card(suit='hearts', rank='A')
+        card2 = Card(suit='hearts', rank='K')        
+        assert isinstance(card1, Card), f'{card1}Error: Card class must be defined'
+       
+        # test def __lt__(self, card: "Card") -> bool:
+        assert card1 < card2, f'Expected True, got False'
+        assert card1.__lt__(card2) == True, f'Expected True, got False'
 
     def test_Marble_class(self):
         """Test 003: Validate Marble class [1 points]"""
@@ -195,7 +200,6 @@ class TestDogBenchmark:
         self.game_server.print_state()
         assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
 
-    
         
 # --- end of tests ---
 
