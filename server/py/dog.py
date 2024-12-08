@@ -713,11 +713,44 @@ class Dog(Game):
 
 class RealPlayer(Player):
 
-    def select_action(self, state: GameState, actions: List[GameAction]) -> GameAction:
-        # TODO LATIN-33
-        """ Given masked game state and possible actions, select the next action """
-        pass
+    def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]:
+        """
+        Given masked game state and possible actions, select the next action.
+        This can be made interactive or based on predefined logic.
 
+        Args:
+            state (GameState): The current game state for the player.
+            actions (List[Action]): The list of possible actions for the player.
+
+        Returns:
+            Optional[Action]: The selected action.
+        """
+        print("Your current cards:")
+        for i, card in enumerate(state.list_player[state.idx_player_active].list_card):
+            print(f"{i + 1}. {card.rank} of {card.suit}")
+
+        print("\nPossible Actions:")
+        for i, action in enumerate(actions):
+            if action.card_swap:
+                print(f"{i + 1}. Play {action.card.rank} of {action.card.suit}, "
+                      f"swap to {action.card_swap.rank} of {action.card_swap.suit}, "
+                      f"move marble from {action.pos_from} to {action.pos_to}")
+            else:
+                print(f"{i + 1}. Play {action.card.rank} of {action.card.suit}, "
+                      f"move marble from {action.pos_from} to {action.pos_to}")
+
+        # User selects an action
+        try:
+            selected_index = int(input("\nSelect an action by entering the action number: ")) - 1
+            if 0 <= selected_index < len(actions):
+                return actions[selected_index]
+        except ValueError:
+            print("Invalid input. Please enter a valid action number.")
+        except IndexError:
+            print("Selected action is out of range.")
+
+        # If no valid action is selected, return None (skip turn)
+        return None
 
 class RandomPlayer(Player):
 
