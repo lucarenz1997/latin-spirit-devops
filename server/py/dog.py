@@ -187,7 +187,7 @@ class Dog(Game):
                 )
 
         # Mark swapping phase as completed
-        self._state.bool_card_swapped = True
+        self._state.bool_card_exchanged = True
 
     def _choose_card_to_swap(self, player: PlayerState) -> Optional[Card]:
         """Choose a card to swap. This is placeholder logic."""
