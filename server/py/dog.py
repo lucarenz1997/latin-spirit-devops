@@ -4,7 +4,7 @@ from typing import List, Optional, ClassVar
 
 from pydantic import BaseModel
 
-from server.py.game import Game, Player, GameAction
+from server.py.game import Game, Player
 
 
 class Card(BaseModel):
@@ -110,7 +110,7 @@ class GameState(BaseModel):
         )
         return (
             f"Game Phase: {self.phase}\n"
-            f"Round: {self.cnt_round}\n"
+            f"Round: {self.cnt_round}\n" #pylint
             f"Active Player: {self.idx_player_active + 1}\n"
             f"Players:\n{player_states}\n"
             f"Cards to Draw: {len(self.list_card_draw)}\n"
@@ -150,6 +150,7 @@ class Dog(Game):
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
             card_active=None
+
         )
         random.shuffle(self._state.list_card_draw)
         self.deal_cards()
@@ -169,34 +170,34 @@ class Dog(Game):
 
     def _handle_card_swapping(self) -> None:
         """Handle the card-swapping process for all players."""
-        for idx_player, player in enumerate(self._state.list_player):
+        for idx_player, current_player in enumerate(self._state.list_player):
             # Determine teammate index based on player index (teammates are 2 positions apart)
             teammate_idx = (idx_player + 2) % self._state.cnt_player
             teammate = self._state.list_player[teammate_idx]
 
             # Choose cards to swap (randomly for now)
-            chosen_card = self._choose_card_to_swap(player)
+            chosen_card = self._choose_card_to_swap(current_player)
             swapped_card = self._choose_card_to_swap(teammate)
 
             # Swap the chosen cards
             if chosen_card and swapped_card:
-                player.list_card.remove(chosen_card)
+                current_player.list_card.remove(chosen_card)
                 teammate.list_card.remove(swapped_card)
-                player.list_card.append(swapped_card)
+                current_player.list_card.append(swapped_card)
                 teammate.list_card.append(chosen_card)
 
                 print(
-                    f"Player {player.name} swapped {chosen_card.rank} of {chosen_card.suit} "
+                    f"Player {current_player.name} swapped {chosen_card.rank} of {chosen_card.suit} "
                     f"with Player {teammate.name}'s {swapped_card.rank} of {swapped_card.suit}."
                 )
 
         # Mark swapping phase as completed
-        self._state.bool_card_swapped = True
+        self._state.bool_card_exchanged = True
 
-    def _choose_card_to_swap(self, player: PlayerState) -> Optional[Card]:
+    def _choose_card_to_swap(self, player_state: PlayerState) -> Optional[Card]:
         """Choose a card to swap. This is placeholder logic."""
-        if player.list_card:
-            return random.choice(player.list_card)  # Randomly select a card to swap
+        if player_state.list_card:
+            return random.choice(player_state.list_card)  # Randomly select a card to swap
         return None
 
     transformed_joker_card = None
@@ -284,7 +285,6 @@ class Dog(Game):
                         to_positions = self._calculate_position_to(
                             marble.pos, card, actions_for_player_with_marbles_to_check)  # simple calculations
 
-                    # TODO Add more logic for all the other cards LATIN-35
                     if card.rank == '7':
                         # can be split into multiple marbles. if takes over, reset other marble
                         # to_positions = ...
@@ -377,7 +377,8 @@ class Dog(Game):
                                         card_swap=None
                                     ))
 
-                        # If no actions exist, allow swapping two of the active player's marbles (which does not make a difference, but we do it for the test
+                        # If no actions exist, allow swapping two of the active player's marbles
+                        # (which does not make a difference, but we do it for the test
                         if not actions:
                             for i, marble_own in enumerate(active_player_marbles):
                                 for marble_partner in active_player_marbles[i:]:
@@ -427,11 +428,11 @@ class Dog(Game):
                                     card_swap=Card(suit='♥', rank=rank)
                                 ))
 
-                    # checks for each possible position if the way is blocked. if it is not blocked, we add it to action.
+                    # checks for each possible position if the way is blocked.
+                    # if it is not blocked, we add it to action.
                     for pos_to in to_positions:
                         if not self._is_way_blocked(
                                 pos_to, marble.pos, self._get_all_safe_marbles()):
-                            # TODO add logic for card_swap (once we know what this is used for) LATIN-37
                             actions.append(Action(card=card, pos_from=marble.pos, pos_to=pos_to,
                                                   card_swap=None))
 
@@ -466,7 +467,6 @@ class Dog(Game):
                 return True
         return False
 
-    # TODO LATIN-47 Check for TEAM WIN, if 2 players of the same team have all their marbles in the final area
     def _check_team_win(self) -> bool:
         """
         Check if a team has won, that means, both players on a team have all their marbles in the final area.
@@ -551,8 +551,7 @@ class Dog(Game):
                 if marble_to_move:
                     if action.pos_to is not None:
                     # Check for collision before moving the marble
-                        if self._is_collision(marble=marble_to_move, pos_to=action.pos_to,
-                                              card=action.card):
+                        if self._is_collision(pos_to=action.pos_to):
                             self._handle_collision(action=action)
 
                     # Perform the movement logic
@@ -592,7 +591,7 @@ class Dog(Game):
         # Update marble position
         marble.pos = pos_to
 
-    def _is_collision(self, marble: Marble, pos_to: int, card: Card) -> bool:
+    def _is_collision(self, pos_to: int) -> bool:
         """
         Check if the movement of the marble using the card results in a collision.
 
@@ -610,51 +609,15 @@ class Dog(Game):
         active_player_marbles = {m.pos for m in active_player.list_marble}
 
         # Check if the target position is occupied by a marble
-        for player_index, player in enumerate(self._state.list_player):
+        for player_index, current_player in enumerate(self._state.list_player):
 
-            for other_marble in player.list_marble:
+            for other_marble in current_player.list_marble:
                 if other_marble.pos == pos_to:
                     # If the marble is not safe and belongs to another player, return True
                     if not other_marble.is_save:
                         return True
 
         return False
-
-        # TODO logic if card is 7!
-
-        # pos_from = int(marble.pos)
-        # total_steps = self.TOTAL_STEPS
-        # marble_positions = {int(m.pos) for player in self._state.list_player for m in player.list_marble}
-        #
-        # # Exclude the active player's marbles from the collision check for the start marble
-        # active_player = self._state.list_player[self._state.idx_player_active]
-        # active_player_marbles = {int(m.pos) for m in active_player.list_marble}
-        #
-        # # If the marble is moving to a position occupied by its own start, do not count as a collision
-        # if pos_to in active_player_marbles and pos_to != marble.pos:
-        #     return True
-        #
-        # if card.rank == '7':
-        #     # Simulate all positions between pos_from and pos_to
-        #     steps = abs(pos_to - pos_from)
-        #     for step in range(1, steps + 1):
-        #         intermediate_pos = (pos_from + step) % total_steps
-        #         if intermediate_pos in marble_positions and intermediate_pos not in active_player_marbles:
-        #             return True
-        #
-        # elif card.rank == '4':
-        #     # Similar logic, but account for reverse movement
-        #     if pos_to < pos_from:  # Handling wrap-around
-        #         pos_range = list(range(pos_from, total_steps)) + list(range(0, pos_to + 1))
-        #     else:
-        #         pos_range = list(range(pos_from, pos_to + 1))
-        #
-        #     for pos in pos_range:
-        #         if pos in marble_positions and pos not in active_player_marbles:
-        #             return True
-        #
-        # # Add additional checks for other cards with collision logic
-        # return False
 
     def _handle_collision(self, action: Action) -> None:
         """
@@ -670,20 +633,18 @@ class Dog(Game):
                     marble.is_save = True
                     print(f"Collision: Marble from Player {player_index + 1} sent back to the queue.")
                     return
-
-    # TODO LATIN-28 check if logic is actually what we need it to be
-
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the opponent's cards are face down) """
         masked_state: GameState = self._state.copy()
-        for i, player in enumerate(masked_state.list_player):
+        for i, current_player in enumerate(masked_state.list_player):
             if i != idx_player:
-                player.list_card = [Card(suit='?', rank='?')] * len(player.list_card)
+                current_player.list_card = [Card(suit='?', rank='?')] * len(current_player.list_card)
         return masked_state
 
     def _refresh_deck(self) -> None:
         """
-        Shuffle the draw pile. If the draw pile does not have enough cards to be dealt, move discarded cards back to the draw pile and shuffle.
+        Shuffle the draw pile. If the draw pile does not have enough cards to be dealt,
+        move discarded cards back to the draw pile and shuffle.
         """
 
         # Move discarded cards to the draw pile
@@ -693,7 +654,6 @@ class Dog(Game):
         # Shuffle the draw pile
         random.shuffle(self._state.list_card_draw)
 
-    # TODO in case the way is blocked (marble on 0/16/32/48 of the player with correct index (marble.is_save)?). LATIN-36
     def _is_way_blocked(self, pos_to: int, pos_from: int, safe_marbles: List[Marble]) -> bool:
         """ Check if the way is blocked between from  & to by any safe marble
         - If a marble is in the way: return True
@@ -721,7 +681,6 @@ class Dog(Game):
 
         return False  # No safe marble is blocking the path
 
-    # TODO complete method LATIN-34
     def _calculate_position_to(self, pos_from: int, card: Card, active_player_indx: int) -> List[int]:
         """ Calculate the final possible_positions based on the card """
 
@@ -742,7 +701,7 @@ class Dog(Game):
         return possible_positions
 
     def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int,
-                                     final_area_end: int) -> bool:
+                                     final_area_end: int) -> bool: # pylint: disable=too-many-arguments
         """
         Validates whether a move in the final area is legal based on game rules.
         Marbles cannot jump over other marbles in the final area.
@@ -757,17 +716,16 @@ class Dog(Game):
                     return False  # Found a marble in the way, move is invalid.
         return True
 
-    # TODO LATIN-41
     def _get_all_safe_marbles(self) -> list[Marble]:
         safe_marbles = []
-        for player in self._state.list_player:
-            for marble in player.list_marble:
+        for current_player in self._state.list_player:
+            for marble in current_player.list_marble:
                 if marble.is_save:
                     safe_marbles.append(marble)
         return safe_marbles
 
     def deal_cards(self) -> None:
-        for player in self._state.list_player:
+        for current_player in self._state.list_player:
             round_mod = self._state.cnt_round % 10
             if round_mod == 0:
                 cards_to_deal = 2
@@ -781,7 +739,7 @@ class Dog(Game):
 
             for _ in range(cards_to_deal):
                 card = self._state.list_card_draw.pop()
-                player.list_card.append(card)
+                current_player.list_card.append(card)
 
     def _set_marbles(self) -> None:
         for player_index in range(len(self._state.list_player)):
@@ -793,12 +751,12 @@ class Dog(Game):
                         is_save=True)
                 )
 
-    def _swap_marbles(self, action: Action) -> None:
+    def _swap_marbles(self, chosen_action: Action) -> None:
         """
           Swap the positions of two marbles based on the provided action.
 
           Args:
-              action (Action): The action containing pos_from and pos_to.
+              chosen_action (Action): The action containing pos_from and pos_to.
           """
         marble_from = None
         marble_to = None
@@ -806,9 +764,9 @@ class Dog(Game):
         # Find the marble at pos_from and pos_to
         for player in self._state.list_player:
             for marble in player.list_marble:
-                if marble.pos == action.pos_from:
+                if marble.pos == chosen_action.pos_from:
                     marble_from = marble
-                elif marble.pos == action.pos_to:
+                elif marble.pos == chosen_action.pos_to:
                     marble_to = marble
 
                 # Exit early if both marbles are found
@@ -822,14 +780,6 @@ class Dog(Game):
             marble_from.pos, marble_to.pos = marble_to.pos, marble_from.pos
 
 
-class RealPlayer(Player):
-
-    def select_action(self, state: GameState, actions: List[GameAction]) -> GameAction:
-        # TODO LATIN-33
-        """ Given masked game state and possible actions, select the next action """
-        pass
-
-
 class RandomPlayer(Player):
 
     def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]:
@@ -841,26 +791,18 @@ class RandomPlayer(Player):
 
 if __name__ == '__main__':
     game = Dog()
-    player = RealPlayer()
+    player = RandomPlayer()
 
     while game.get_state().phase != GamePhase.FINISHED:
-        # Card-swapping phase at the start of the round
-        if not game.get_state().bool_card_exchanged:
-            print("Starting card-swapping phase...")
-            game._handle_card_swapping()
-
-        # Deal cards if necessary
-        game.deal_cards()
-
-        active_players = 4
-        while active_players > 0:
+        ACTIVE_PLAYERS = 4
+        while ACTIVE_PLAYERS > 0:
             list_actions = game.get_list_action()
 
             if not list_actions:
-                active_players -= 1
+                ACTIVE_PLAYERS -= 1
                 print("Player has no actions left. Please wait until the round is over.")
             else:
-                action = player.select_action(game.get_state(), list_actions)
+                action: Action = player.select_action(game.get_state(), list_actions)  # type: ignore
                 game.apply_action(action)
                 game.print_state()
 
