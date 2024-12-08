@@ -16,7 +16,7 @@
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 
-from server.py.dog import Card, Marble, PlayerState, Action, GameState, GamePhase, Dog, RandomPlayer
+from server.py.dog import Card, Marble, PlayerState, Action, GameState, GamePhase, Dog
 
 import coverage
 import pytest
@@ -382,6 +382,35 @@ class TestDogBenchmark:
 
 
 
+
+
+
+        self.game_server.set_state(game_state)
+        assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
+
+    def test_print_state(self):
+        """Test 011: Validate Dog.print_state method [5 points]"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+
+        self.game_server.set_state(game_state)
+        self.game_server.print_state()
+        assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
 
 
 
