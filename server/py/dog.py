@@ -168,6 +168,32 @@ class Dog(Game):
         """ Print the current game state """
         print(self._state)
 
+    def _handle_card_swapping(self) -> None:
+        """Handle the card-swapping process for all players."""
+        for idx_player, current_player in enumerate(self._state.list_player):
+            # Determine teammate index based on player index (teammates are 2 positions apart)
+            teammate_idx = (idx_player + 2) % self._state.cnt_player
+            teammate = self._state.list_player[teammate_idx]
+
+            # Choose cards to swap (randomly for now)
+            chosen_card = self._choose_card_to_swap(current_player)
+            swapped_card = self._choose_card_to_swap(teammate)
+
+            # Swap the chosen cards
+            if chosen_card and swapped_card:
+                current_player.list_card.remove(chosen_card)
+                teammate.list_card.remove(swapped_card)
+                current_player.list_card.append(swapped_card)
+                teammate.list_card.append(chosen_card)
+
+                print(
+                    f"Player {current_player.name} swapped {chosen_card.rank} of {chosen_card.suit} "
+                    f"with Player {teammate.name}'s {swapped_card.rank} of {swapped_card.suit}."
+                )
+
+        # Mark swapping phase as completed
+        self._state.bool_card_exchanged = True
+
     def _choose_card_to_swap(self, player_state: PlayerState) -> Optional[Card]:
         """Choose a card to swap. This is placeholder logic."""
         if player_state.list_card:
@@ -259,9 +285,10 @@ class Dog(Game):
                         to_positions = self._calculate_position_to(
                             marble.pos, card, actions_for_player_with_marbles_to_check)  # simple calculations
 
-                    if card.rank == '7' or (self._state.card_active and self._state.card_active.rank == '7'):
-
-                        actions.extend(self._generate_seven_actions(marbles_to_check, card))
+                    if card.rank == '7':
+                        # can be split into multiple marbles. if takes over, reset other marble
+                        # to_positions = ...
+                        pass
 
                     if card.rank == 'A':
                         # Move 1 spot forward
@@ -423,6 +450,23 @@ class Dog(Game):
                              queue_start <= int(marble.pos) < queue_end]
         return len(marbles_in_kennel)
 
+    def _check_finish_game(self) -> bool:
+        """
+        Check if the game is finished, i.e., any player has all their marbles in the final area.
+        If the game is finished, set the game phase to FINISHED.
+        """
+        for idx_player, player in enumerate(self._state.list_player):
+            final_start = self.PLAYER_POSITIONS[idx_player]['final_start']
+            # Final area positions
+            final_positions = range(final_start, final_start + 4)
+            if all(marble.pos in final_positions for marble in player.list_marble):
+                # All marbles of this player are in their final positions
+                self._state.phase = GamePhase.FINISHED
+                print(
+                    f"Player {idx_player + 1} ({player.name}) has won the game!")
+                return True
+        return False
+
     def _check_team_win(self) -> bool:
         """
         Check if a team has won, that means, both players on a team have all their marbles in the final area.
@@ -453,25 +497,10 @@ class Dog(Game):
         """ Apply the given action to the game """
         active_player = self._state.list_player[self._state.idx_player_active]
 
+
         self._handle_none_action(action, active_player)
 
         if action is not None and action.card in active_player.list_card:
-            if action.card.rank == '7':
-                # Handle marble moves for card #7
-                if action.pos_from is not None and action.pos_to is not None:
-                    marble_to_move = next(
-                        (marble for marble in active_player.list_marble if marble.pos == action.pos_from), None
-                    )
-
-                    if marble_to_move:
-                        # Detect marbles taken over during the move
-                        marbles_to_reset = self._get_marbles_between(action.pos_from, action.pos_to)
-
-                        for reset_marble in marbles_to_reset:
-                            self._reset_to_kennel(reset_marble)
-
-                        # Move the active player's marble to its new position
-                        self._move_marble_logic(marble_to_move, action.pos_to, action.card, is_player_finished=self.active_player_has_finished)
 
             # card exchange with partner
             if (not self._state.bool_card_exchanged
@@ -604,40 +633,6 @@ class Dog(Game):
 
         return False
 
-    def _get_marbles_between(self, pos_from: int, pos_to: int) -> List[Marble]:
-        """
-        Get all marbles that are taken over between pos_from and pos_to.
-        """
-        marbles_to_reset = []
-
-        for player in self._state.list_player:
-            for marble in player.list_marble:
-                if marble.pos == pos_from:
-                    continue  # Exclude the marble starting the move
-
-                # Normalize positions to handle circular board
-                marble_pos = marble.pos
-                adjusted_pos_to = pos_to + (self.TOTAL_STEPS if pos_to < pos_from else 0)
-                adjusted_marble_pos = marble_pos + (self.TOTAL_STEPS if marble_pos < pos_from else 0)
-
-                # Check if the marble is in the range of the move
-                if pos_from < adjusted_marble_pos <= adjusted_pos_to:
-                    marbles_to_reset.append(marble)
-
-        return marbles_to_reset
-
-    def _reset_to_kennel(self, marble: Marble) -> None:
-        """
-        Reset a marble to its kennel (queue start position).
-        """
-        for player_index, player in enumerate(self._state.list_player):
-            if marble in player.list_marble:
-                queue_start = self.PLAYER_POSITIONS[player_index]['queue_start']
-                marble_index = player.list_marble.index(marble)
-                marble.pos = queue_start + marble_index
-                marble.is_save = True
-                print(f"Marble at position {marble.pos} reset to kennel.")
-                return
     def _handle_collision(self, action: Action) -> None:
         """
         Handle the collision by sending the marble back to its starting position.
@@ -797,45 +792,6 @@ class Dog(Game):
         # If both marbles are found, swap their positions
         if marble_from and marble_to:
             marble_from.pos, marble_to.pos = marble_to.pos, marble_from.pos
-
-    def _generate_seven_actions(self, marbles: List[Marble], card: Card) -> List[Action]:
-        """Generate all possible combinations of moves for card rank 7."""
-        possible_actions = []
-
-        # def recurse(marbles_left: List[Marble], remaining_steps: int, current_combination: List[Action]):
-        #     """Recursive helper to generate combinations."""
-        #     if remaining_steps == 0:
-        #         possible_actions.append(current_combination[:])
-        #         return
-        #
-        #     for marble in marbles_left:
-        #         # Generate possible moves for this marble
-        #         for step in range(1, remaining_steps + 1):  # Marble can take up to remaining_steps
-        #             pos_to = self._calculate_position_to(marble.pos, Card(suit=card.rank, rank=str(step)),
-        #                                                  self._state.idx_player_active)[0]
-        #
-        #             # Validate the move
-        #             if not self._is_collision(pos_to) and marble.pos != pos_to:
-        #                 # Create the action
-        #                 action = Action(
-        #                     card=card,
-        #                     pos_from=marble.pos,
-        #                     pos_to=pos_to,
-        #                     card_swap=None
-        #                 )
-        #
-        #                 # Temporarily move the marble for recursive generation
-        #                 original_pos = marble.pos
-        #                 marble.pos = pos_to
-        #
-        #                 # Recurse with updated steps and current combination
-        #                 recurse(marbles_left, remaining_steps - step, current_combination + [action])
-        #
-        #                 # Reset marble position after recursion
-        #                 marble.pos = original_pos
-        #
-        # recurse(marbles, 7, [])
-        return possible_actions
 
 
 class RandomPlayer(Player):
