@@ -11,7 +11,7 @@ class Card(BaseModel):
     suit: str  # card suit (color)
     rank: str  # card rank
 
-    def __lt__(self, card) -> bool:
+    def __lt__(self, card: "Card") -> bool:
         return self.suit < card.suit or \
             self.rank < card.rank
 
@@ -211,9 +211,7 @@ class Dog(Game):
         active_player = self._state.list_player[self._state.idx_player_active]
 
         marbles_in_kennel = self._count_marbles_in_kennel(self._state.idx_player_active)
-        cards = active_player.list_card
-        if self.transformed_joker_card is not None:
-            cards :list[Card]= [self.transformed_joker_card]
+        cards = [self.transformed_joker_card] if self.transformed_joker_card else active_player.list_card
 
         if not self._state.bool_card_exchanged:
             for card in cards:
@@ -551,10 +549,11 @@ class Dog(Game):
                 )
 
                 if marble_to_move:
+                    if action.pos_to is not None:
                     # Check for collision before moving the marble
-                    if self._is_collision(marble=marble_to_move, pos_to=action.pos_to,
-                                          card=action.card):  # type: ignore
-                        self._handle_collision(action=action)  # type: ignore
+                        if self._is_collision(marble=marble_to_move, pos_to=action.pos_to,
+                                              card=action.card):
+                            self._handle_collision(action=action)
 
                     # Perform the movement logic
                     self._move_marble_logic(marble_to_move, action.pos_to, action.card)  # type: ignore
