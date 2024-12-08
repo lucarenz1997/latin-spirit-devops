@@ -110,7 +110,7 @@ class GameState(BaseModel):
         )
         return (
             f"Game Phase: {self.phase}\n"
-            f"Round: {self.cnt_round}\n" # pylint disable=no-member
+            f"Round: {self.cnt_round}\n" # pylint: disable=no-member
             f"Active Player: {self.idx_player_active + 1}\n"
             f"Players:\n{player_states}\n"
             f"Cards to Draw: {len(self.list_card_draw)}\n"
@@ -177,7 +177,7 @@ class Dog(Game):
     transformed_joker_card = None
     active_player_has_finished = False
 
-    def get_list_action(self) -> List[Action]: # pylint: disable=too-many-locals, too-many-statements
+    def get_list_action(self) -> List[Action]: # pylint: disable=too-many-locals, too-many-statements, too-many-branches
         """ Get a list of possible actions for the active player """
         actions = []
         unique_actions = []
@@ -436,7 +436,7 @@ class Dog(Game):
     none_actions_counter = 0
     card_exchanges_counter = 0
 
-    def apply_action(self, action: Action) -> None: # pylint: disable=too-many-locals, too-many-statements, redefined-outer-name
+    def apply_action(self, action: Action) -> None: # pylint: disable=too-many-locals, too-many-statements, redefined-outer-name, too-many-branches
         """ Apply the given action to the game """
         active_player = self._state.list_player[self._state.idx_player_active]
 
