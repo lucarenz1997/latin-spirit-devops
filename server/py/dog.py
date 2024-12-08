@@ -555,7 +555,7 @@ class Dog(Game):
                             self._handle_collision(action=action)
 
                     # Perform the movement logic
-                    self._move_marble_logic(marble_to_move, action.pos_to, action.card)  # type: ignore
+                    self._move_marble_logic(marble_to_move, action.pos_to, action.card, self.active_player_has_finished)  # type: ignore
 
         if self._check_team_win():
             self._state.phase = self._state.phase.FINISHED
@@ -582,7 +582,7 @@ class Dog(Game):
             self.none_actions_counter += 1
             active_player.list_card = []
 
-    def _move_marble_logic(self, marble: Marble, pos_to: int, card: Card) -> None:
+    def _move_marble_logic(self, marble: Marble, pos_to: int, card: Card, is_player_finished: bool) -> None:
         """
         Core logic for moving a marble to a new position.
         """
@@ -590,6 +590,20 @@ class Dog(Game):
 
         # Update marble position
         marble.pos = pos_to
+
+        if is_player_finished:
+            index = (self._state.idx_player_active + 2) % self._state.cnt_player
+        else:
+            index = self._state.idx_player_active
+
+            # Determine if the new position is "safe"
+        safe_positions = {
+            self.PLAYER_POSITIONS[index]['start'],
+            *range(self.PLAYER_POSITIONS[index]['queue_start'], self.PLAYER_POSITIONS[index]['queue_start'] + 4),
+            *range(self.PLAYER_POSITIONS[index]['final_start'], self.PLAYER_POSITIONS[index]['final_start'] + 4)
+        }
+
+        marble.is_save = pos_to in safe_positions
 
     def _is_collision(self, pos_to: int) -> bool:
         """
