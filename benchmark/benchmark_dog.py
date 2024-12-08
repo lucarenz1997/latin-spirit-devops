@@ -617,7 +617,7 @@ class DogBenchmark(benchmark.Benchmark):
             hint += f'\n{self.get_list_action_as_str(list_action_expected)}'
             hint += f'\nFound:'
             hint += f'\n{self.get_list_action_as_str(list_action_found)}'
-            # assert self.get_sorted_list_action(list_action_found) == self.get_sorted_list_action(list_action_expected), hint
+            assert self.get_sorted_list_action(list_action_found) == self.get_sorted_list_action(list_action_expected), hint
 
     def test_chose_card_with_JOKER_2(self):
         """Test 026: Test JOKER card in later game [5 point]"""
@@ -671,7 +671,7 @@ class DogBenchmark(benchmark.Benchmark):
             hint += f'\n{self.get_list_action_as_str(list_action_expected)}'
             hint += f'\nFound:'
             hint += f'\n{self.get_list_action_as_str(list_action_found)}'
-            # assert self.get_sorted_list_action(list_action_found) == self.get_sorted_list_action(list_action_expected), hint
+            assert self.get_sorted_list_action(list_action_found) == self.get_sorted_list_action(list_action_expected), hint
 
         list_card = [Card(suit='♦', rank='A'), Card(suit='♥', rank='K'), Card(suit='', rank='JKR')]
 
