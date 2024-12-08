@@ -200,6 +200,8 @@ class Dog(Game):
         return None
 
     transformed_joker_card = None
+    active_player_has_finished = False
+
     def get_list_action(self) -> List[Action]:
         """ Get a list of possible actions for the active player """
         actions = []
@@ -208,16 +210,44 @@ class Dog(Game):
 
         active_player = self._state.list_player[self._state.idx_player_active]
 
-        marbles_in_kennel = self._count_marbles_in_kennel()
+        marbles_in_kennel = self._count_marbles_in_kennel(self._state.idx_player_active)
         cards = active_player.list_card
         if self.transformed_joker_card is not None:
             cards :list[Card]= [self.transformed_joker_card]
-        for card in cards:
-            for marble in active_player.list_marble:
-                # TODO Go through all cards and marbles and return the possible positions.
 
-                queue_start = self.PLAYER_POSITIONS[self._state.idx_player_active]['queue_start']
-                active_player_fields = self.PLAYER_POSITIONS[self._state.idx_player_active]
+        if not self._state.bool_card_exchanged:
+            for card in cards:
+                actions.append(Action(
+                    card=card,
+                    pos_from=None,
+                    pos_to=None,
+                    card_swap=None
+                ))
+            return actions
+
+        # checks and assignments in case one player is done and must move teammates marbles
+        final_start = self.PLAYER_POSITIONS[self._state.idx_player_active]['final_start']
+        final_end = final_start + 4
+        player_has_finished = all(
+            final_start <= marble.pos < final_end for marble in active_player.list_marble)
+
+        if player_has_finished:
+            teammate_idx = (self._state.idx_player_active + 2) % self._state.cnt_player
+            teammate = self._state.list_player[teammate_idx]
+            marbles_to_check = teammate.list_marble
+            actions_for_player_with_marbles_to_check = teammate_idx
+            marbles_in_kennel = self._count_marbles_in_kennel(teammate_idx)
+            self.active_player_has_finished = True
+        else:
+            marbles_to_check = active_player.list_marble
+            actions_for_player_with_marbles_to_check = self._state.idx_player_active
+            self.active_player_has_finished = False
+
+        for card in cards:
+            for marble in marbles_to_check:
+
+                queue_start = self.PLAYER_POSITIONS[actions_for_player_with_marbles_to_check]['queue_start']
+                active_player_fields = self.PLAYER_POSITIONS[actions_for_player_with_marbles_to_check]
                 final_start = active_player_fields['final_start']
                 # if marble is in kennel
                 if marble.pos in range(queue_start,
@@ -226,10 +256,10 @@ class Dog(Game):
 
                         # only allow actions for ACE, KING or JOKER
                         if card.rank in ['A', 'JKR', 'K']:
-                            start_position = self.PLAYER_POSITIONS[self._state.idx_player_active]['start']
+                            start_position = self.PLAYER_POSITIONS[actions_for_player_with_marbles_to_check]['start']
 
                             # allow only if the current player does not have a marble on start
-                            if all(m.pos != start_position for m in active_player.list_marble):
+                            if all(m.pos != start_position for m in marbles_to_check):
                                 # if 4 in kennel, start_position + 3 - #in kennel-1
                                 if marble.pos == queue_start + 4 - marbles_in_kennel:
                                     actions.append(Action(card=card, pos_from=marble.pos, pos_to=start_position,
@@ -237,8 +267,6 @@ class Dog(Game):
 
                                 # Handle JOKER acting as ACE or KING
                                 if card.rank == 'JKR':
-
-
                                     # Joker acting as Ace
                                     actions.append(Action(
                                         card=card,
@@ -253,26 +281,10 @@ class Dog(Game):
                                         pos_to=None,
                                         card_swap=Card(suit='♥', rank='K')
                                     ))
-
-
-                                    # # As Ace
-                                    # actions.append(Action(
-                                    #     card=card,
-                                    #     pos_from=None,
-                                    #     pos_to=None,
-                                    #     card_swap=Card(suit='♥', rank='A')  # JKR acting as Ace
-                                    # ))
-                                    # # As King
-                                    # actions.append(Action(
-                                    #     card=card,
-                                    #     pos_from=None,
-                                    #     pos_to=None,
-                                    #     card_swap=Card(suit='♥', rank='K')  # JKR acting as King
-                                    # ))
                 else:
                     if card.rank.isdigit() and card.rank not in ['7', '4']:
                         to_positions = self._calculate_position_to(
-                            marble.pos, card, self._state.idx_player_active)  # simple calculations
+                            marble.pos, card, actions_for_player_with_marbles_to_check)  # simple calculations
 
                     # TODO Add more logic for all the other cards LATIN-35
                     if card.rank == '7':
@@ -300,7 +312,7 @@ class Dog(Game):
                             if (not self._is_way_blocked(pos_to, marble.pos,
                                                          self._get_all_safe_marbles()) and
                                     not self._is_valid_move_in_final_area(marble.pos,
-                                                                          pos_to, active_player.list_marble,
+                                                                          pos_to, marbles_to_check,
                                                                           final_start,
                                                                           final_start + 3
                                                                           )):
@@ -314,7 +326,7 @@ class Dog(Game):
                         if marble.pos < queue_start and next_position >= queue_start:
                             next_position = final_start + (next_position - queue_start) - 1
 
-                        if self._is_valid_move_in_final_area(marble.pos, next_position, active_player.list_marble,
+                        if self._is_valid_move_in_final_area(marble.pos, next_position, marbles_to_check,
                                                              final_start,
                                                              final_start + 3):
                             to_positions.append(next_position)
@@ -325,7 +337,7 @@ class Dog(Game):
                         if marble.pos < queue_start and next_position >= queue_start:
                             next_position = final_start + (next_position - queue_start) - 1
 
-                        if self._is_valid_move_in_final_area(marble.pos, next_position, active_player.list_marble,
+                        if self._is_valid_move_in_final_area(marble.pos, next_position, marbles_to_check,
                                                              final_start,
                                                              final_start + 3):
                             to_positions.append(next_position)
@@ -334,7 +346,7 @@ class Dog(Game):
 
                         # Get the active player's marbles that are not in the kennel
                         active_player_marbles = [
-                            marble for marble in active_player.list_marble
+                            marble for marble in marbles_to_check
                             if marble.pos not in range(queue_start, queue_start + 4)  # Exclude marbles in the kennel
                         ]
 
@@ -342,7 +354,7 @@ class Dog(Game):
                         other_players_marbles = [
                             (player_idx, marble)
                             for player_idx, player in enumerate(self._state.list_player)
-                            if player_idx != self._state.idx_player_active  # Exclude the active player
+                            if player_idx != actions_for_player_with_marbles_to_check  # Exclude the active player
                             for marble in player.list_marble
                             if not marble.is_save  # Only consider marbles that are not safe
                         ]
@@ -431,9 +443,9 @@ class Dog(Game):
 
         return unique_actions
 
-    def _count_marbles_in_kennel(self) -> int:
-        active_player = self._state.list_player[self._state.idx_player_active]
-        queue_start = self.PLAYER_POSITIONS[self._state.idx_player_active]['queue_start']
+    def _count_marbles_in_kennel(self, index:int) -> int:
+        active_player = self._state.list_player[index]
+        queue_start = self.PLAYER_POSITIONS[index]['queue_start']
         queue_end = queue_start + 4
         marbles_in_kennel = [marble for marble in active_player.list_marble if
                              queue_start <= int(marble.pos) < queue_end]
@@ -481,12 +493,33 @@ class Dog(Game):
         return False
 
     none_actions_counter = 0
+    card_exchanges_counter = 0
 
     def apply_action(self, action: Action) -> None:
         """ Apply the given action to the game """
         active_player = self._state.list_player[self._state.idx_player_active]
+
+
         self._handle_none_action(action, active_player)
+
         if action is not None and action.card in active_player.list_card:
+
+            # card exchange with partner
+            if (not self._state.bool_card_exchanged
+                    and action.pos_from is None
+                    and action.pos_to is None
+                    and self.card_exchanges_counter <=4):
+                # give your card to your teammate
+                partner = self._state.list_player[(self._state.idx_player_active + 2) % self._state.cnt_player]
+                partner.list_card.append(action.card)
+                active_player.list_card.remove(action.card)
+
+                if self.card_exchanges_counter == 4:
+                    self._state.bool_card_exchanged = True
+                    self.card_exchanges_counter = 0
+                self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
+                return
+
             card_to_apply = action.card
             if action.card_swap is not None:
                 card_to_apply = action.card_swap
@@ -506,6 +539,11 @@ class Dog(Game):
             if action.card.rank == 'J' or (action.card_swap is not None and action.card_swap.rank == 'J'):
                 self._swap_marbles(action)
             else:
+                if self.active_player_has_finished:
+                    active_player = self._state.list_player[
+                        (self._state.idx_player_active + 2) % self._state.cnt_player]
+                else:
+                    active_player = self._state.list_player[self._state.idx_player_active]
                 # Find the marble being moved
                 marble_to_move = next(
                     (marble for marble in active_player.list_marble if marble.pos == action.pos_from),
@@ -531,6 +569,7 @@ class Dog(Game):
             # calculate the next player (after 4, comes 1 again). not sure if needed here or somewhere else
             # example: (4+1)%4=1 -> after player 4, it's player 1's turn again
             self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
+            self._state.bool_card_exchanged=False
 
         # if round is over and no cards are left in stack
         if len(self._state.list_card_draw) == 0 and self.none_actions_counter == 4:
@@ -754,14 +793,6 @@ class Dog(Game):
                         int(self.PLAYER_POSITIONS[player_index]['queue_start'] + marble_index),
                         is_save=True)
                 )
-
-    # def _is_valid_final_area_move(self, start:int, end:int, player, final_area_start, final_area_end) -> bool:
-    #     step = 1 if end > start else -1
-    #     for position in range(start + step, end + step, step):
-    #         if final_area_start <= position <= final_area_end:
-    #             if any(marble.pos == position for marble in player.list_marble):
-    #                 return False  # Invalid if another marble is in the way
-    #     return True
 
     def _swap_marbles(self, action: Action) -> None:
         """
