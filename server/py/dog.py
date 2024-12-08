@@ -790,41 +790,6 @@ class Dog(Game):
 
         for marble in marbles:
             print(marble)
-
-
-        # def recurse(marbles_left: List[Marble], remaining_steps: int, current_combination: List[Action]):
-        #     """Recursive helper to generate combinations."""
-        #     if remaining_steps == 0:
-        #         possible_actions.append(current_combination[:])
-        #         return
-        #
-        #     for marble in marbles_left:
-        #         # Generate possible moves for this marble
-        #         for step in range(1, remaining_steps + 1):  # Marble can take up to remaining_steps
-        #             pos_to = self._calculate_position_to(marble.pos, Card(suit=card.rank, rank=str(step)),
-        #                                                  self._state.idx_player_active)[0]
-        #
-        #             # Validate the move
-        #             if not self._is_collision(pos_to) and marble.pos != pos_to:
-        #                 # Create the action
-        #                 action = Action(
-        #                     card=card,
-        #                     pos_from=marble.pos,
-        #                     pos_to=pos_to,
-        #                     card_swap=None
-        #                 )
-        #
-        #                 # Temporarily move the marble for recursive generation
-        #                 original_pos = marble.pos
-        #                 marble.pos = pos_to
-        #
-        #                 # Recurse with updated steps and current combination
-        #                 recurse(marbles_left, remaining_steps - step, current_combination + [action])
-        #
-        #                 # Reset marble position after recursion
-        #                 marble.pos = original_pos
-        #
-        # recurse(marbles, 7, [])
         return possible_actions
 
     def _move_n_forward(self, marble: Marble, steps: int, queue_start: int, final_start: int) -> int:
@@ -832,7 +797,6 @@ class Dog(Game):
         if marble.pos < queue_start and pos >= queue_start:  # pylint: disable=chained-comparison
             pos = final_start + (pos - queue_start) - 1
         return pos
-
 
 class RandomPlayer(Player): # pylint: disable=too-few-public-methods)
 
