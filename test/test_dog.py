@@ -50,7 +50,8 @@ class TestDogBenchmark:
 
     def test_PlayerState_class(self):
         """Test 004: Validate PlayerState class [1 points]"""
-        pass
+        player_state = PlayerState(name = "Player Test", list_card=[], list_marble=[])
+        assert isinstance(player_state, PlayerState), f"Expected instance of PlayerState, got {type(player_state)}"
 
     def test_Action_class(self):
         """Test 005: Validate Action class [1 points]"""
