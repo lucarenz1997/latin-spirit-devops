@@ -50,7 +50,18 @@ class TestDogBenchmark:
 
     def test_PlayerState_class(self):
         """Test 004: Validate PlayerState class [1 points]"""
-        pass
+        # Create an instance of PlayerState with mock data
+        mock_cards = [Card(suit="hearts", rank="A"), Card(suit="clubs", rank="K")]
+        mock_marbles = [Marble(pos=0, is_save=True), Marble(pos=5, is_save=False)]
+        player_state = PlayerState(name="Test Player", list_card=mock_cards, list_marble=mock_marbles)
+
+        # Assert instance is correctly initialized
+        assert isinstance(player_state, PlayerState), f"Expected instance of PlayerState, got {type(player_state)}"
+
+        # Assert attributes with mock data
+        assert player_state.name == "Test Player", f"Expected name to be 'Test Player', got {player_state.name}"
+        assert player_state.list_card == mock_cards, f"Expected list_card to match, got {player_state.list_card}"
+        assert player_state.list_marble == mock_marbles, f"Expected list_marble to match, got {player_state.list_marble}"
 
     def test_Action_class(self):
         """Test 005: Validate Action class [1 points]"""
