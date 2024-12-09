@@ -567,6 +567,32 @@ class TestDogBenchmark:
         assert marbles[0].pos == 5, f'Expected marble at pos 5, got {marbles[0].pos}'
         assert marbles[1].pos == 8, f'Expected marble at pos 8, got {marbles[1].pos}'
 
+    # test all cards have atleast 1 action individually
+    def test_all_cards_actions_individually(self):
+        card_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        for card in card_list:
+            game_state.list_player[0].list_card.append(Card(rank=card, suit='♥'))
+            actions = self.game_server.get_list_action()
+            assert len(actions) >= 1, f'Expected at least 1 action with card {card}, got {len(actions)}'
+    
 
         
 # --- end of tests ---
