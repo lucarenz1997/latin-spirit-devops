@@ -629,7 +629,6 @@ class Dog(Game):
                 marble_index = current_player.list_marble.index(marble)
                 marble.pos = queue_start + marble_index
                 marble.is_save = True
-                print(f"Marble at position {marble.pos} reset to kennel.")
                 return
     def _handle_collision(self, current_action: Action) -> None:
         """
@@ -643,7 +642,6 @@ class Dog(Game):
                     queue_start = self.PLAYER_POSITIONS[player_index]['queue_start']
                     marble.pos = queue_start + current_player.list_marble.index(marble)  # Back to the queue
                     marble.is_save = True
-                    print(f"Collision: Marble from Player {player_index + 1} sent back to the queue.")
                     return
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the opponent's cards are face down) """
