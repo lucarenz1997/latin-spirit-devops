@@ -531,7 +531,43 @@ class TestDogBenchmark:
         actions = self.game_server.get_list_action()
         assert len(actions) >= len(card_list)
 
-    
+    def test_get_marbles_between(self):
+        """Test _get_marbles_between method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False), Marble(pos=5, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=8, is_save=False), Marble(pos=12, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=10, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=15, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: No marbles between pos_from and pos_to
+        marbles = self.game_server._get_marbles_between(1, 2)
+        assert len(marbles) == 0, f'Expected 0 marbles, got {len(marbles)}'
+
+        # Test case 2: One marble between pos_from and pos_to
+        marbles = self.game_server._get_marbles_between(1, 6)
+        assert len(marbles) == 1, f'Expected 1 marble, got {len(marbles)}'
+        assert marbles[0].pos == 5, f'Expected marble at pos 5, got {marbles[0].pos}'
+
+        # Test case 3: Multiple marbles between pos_from and pos_to
+        marbles = self.game_server._get_marbles_between(1, 8)
+        assert len(marbles) == 2, f'Expected 2 marbles, got {len(marbles)}'
+        assert marbles[0].pos == 5, f'Expected marble at pos 5, got {marbles[0].pos}'
+        assert marbles[1].pos == 8, f'Expected marble at pos 8, got {marbles[1].pos}'
+
+
         
 # --- end of tests ---
 
