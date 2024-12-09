@@ -317,9 +317,10 @@ class TestDogBenchmark:
             list_card_discard=[],
             card_active=None
         )
-        self.game_server.apply_action(None)  # collision
+        actions = self.game_server.get_list_action()
 
-        assert True
+        assert len(actions) > 0
+        
 
     def test_game_over(self):
         game_state = GameState(
@@ -349,10 +350,7 @@ class TestDogBenchmark:
         self.game_server._state = game_state  # Ensure game_server uses the correct game state
         self.game_server._check_team_win()
         assert self.game_server._state.phase == GamePhase.FINISHED, f'Expected phase to be FINISHED, got {self.game_server._state.phase}'
-
-    def test_random_player(self):
-        player = RandomPlayer()
-        assert True
+        
 
     def test_state(self):
         game_state = GameState(
@@ -382,7 +380,7 @@ class TestDogBenchmark:
         self.game_server.print_state()
         assert True
 
-    def test_player_view(self):
+    def test_get_player_view(self):
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -409,11 +407,6 @@ class TestDogBenchmark:
         )
         self.game_server.get_player_view(0)
         assert True
-
-
-
-
-
 
         self.game_server.set_state(game_state)
         assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
@@ -442,8 +435,32 @@ class TestDogBenchmark:
         self.game_server.print_state()
         assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
 
+    def test_get_list_action_no_card_exchanged(self):
+        """Test get_list_action when no card has been exchanged"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='A', suit='x')], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='w')], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        assert len(actions) == 1
 
+    
 
+        
 # --- end of tests ---
 
 
