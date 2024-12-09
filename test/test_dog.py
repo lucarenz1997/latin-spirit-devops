@@ -61,6 +61,9 @@ class TestDogBenchmark:
         # Import the GamePhase class (adjust if necessary)
         # Check if GamePhase has expected attributes (example phases)
         assert hasattr(GamePhase, 'RUNNING'), "GamePhase should have an attribute 'RUNNING'."
+        assert hasattr(GamePhase, 'FINISHED'), "GamePhase should have an attribute 'FINISHED'."
+
+       
     
 
     def test_game_state(self):
