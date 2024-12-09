@@ -63,8 +63,9 @@ class TestDogBenchmark:
         assert hasattr(GamePhase, 'RUNNING'), "GamePhase should have an attribute 'RUNNING'."
         assert hasattr(GamePhase, 'FINISHED'), "GamePhase should have an attribute 'FINISHED'."
 
-       
-    
+        # Validate that accessing a phase works
+        assert GamePhase.RUNNING.name == 'RUNNING', f"Expected 'RUNNING', got {GamePhase.RUNNING.name}."
+
 
     def test_game_state(self):
         """Test 007: Validate GameState class [5 points]"""
