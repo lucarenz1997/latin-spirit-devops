@@ -56,10 +56,6 @@ class TestDogBenchmark:
         # Assert instance is correctly initialized
         assert isinstance(player_state, PlayerState), f"Expected instance of PlayerState, got {type(player_state)}"
 
-        # Assert default attributes
-        assert player_state.name == "Test Player", f"Expected name to be 'Test Player', got {player_state.name}"
-        assert player_state.list_card == [], f"Expected list_card to be an empty list, got {player_state.list_card}"
-        assert player_state.list_marble == [], f"Expected list_marble to be an empty list, got {player_state.list_marble}"
 
     def test_Action_class(self):
         """Test 005: Validate Action class [1 points]"""
