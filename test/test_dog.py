@@ -481,8 +481,30 @@ class TestDogBenchmark:
         actions = self.game_server.get_list_action()
         assert len(actions) > 0 # At least one action should be available
 
-    
+    def test_get_list_action_player_finished(self):
+        """Test get_list_action when the active player has finished"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='A', suit='x')], list_marble=[Marble(pos=68, is_save=True), Marble(pos=69, is_save=True), Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        assert len(actions) == 0
 
+    
 
         
 # --- end of tests ---
