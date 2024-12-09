@@ -4,7 +4,7 @@ from typing import List, Optional, ClassVar
 
 from pydantic import BaseModel
 
-from server.py.game import Game, Player
+from server.py.game import Game, Player # pylint: disable=import-error
 
 
 class Card(BaseModel):
@@ -800,7 +800,7 @@ class Dog(Game):
 
 class RandomPlayer(Player): # pylint: disable=too-few-public-methods)
 
-    def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]:
+    def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]: # pylint: disable=unused-argument
         """ Given masked game state and possible actions, select the next action """
         if len(actions) > 0:
             return random.choice(actions)
