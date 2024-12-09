@@ -65,6 +65,7 @@ class TestDogBenchmark:
 
         # Validate that accessing a phase works
         assert GamePhase.RUNNING.name == 'RUNNING', f"Expected 'RUNNING', got {GamePhase.RUNNING.name}."
+        assert GamePhase.FINISHED.name == 'FINISHED', f"Expected 'FINISHED', got {GamePhase.FINISHED.name}."
 
 
     def test_game_state(self):
