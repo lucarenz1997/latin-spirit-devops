@@ -260,12 +260,7 @@ class Dog(Game):
                                     ))
                 else:
                     if card.rank.isdigit() and card.rank not in ['7', '4']:
-                        to_positions = self._calculate_position_to(
-                            marble.pos, card, actions_for_player_with_marbles_to_check)  # simple calculations
-
-                    # if card.rank == '7':
-                    #
-                    #     actions.extend(self._generate_seven_actions(marbles_to_check)) # remove card as param
+                        to_positions = [self._move_n_forward(marble, int(card.rank), queue_start, final_start)]
 
                     if card.rank == 'A':
                         # Move 1 spot forward
@@ -375,7 +370,6 @@ class Dog(Game):
 
                     if card.rank == 'K':
                         to_positions.append(self._move_n_forward(marble, 13, queue_start, final_start))
-
 
                     if card.rank == 'Q':
                         to_positions.append(self._move_n_forward(marble, 12, queue_start, final_start))
@@ -699,26 +693,6 @@ class Dog(Game):
 
         return False  # No safe marble is blocking the path
 
-    def _calculate_position_to(self, pos_from: int, card: Card, active_player_indx: int) -> List[int]:
-        """ Calculate the final possible_positions based on the card """
-
-        active_player_fields = self.PLAYER_POSITIONS[active_player_indx]
-        queue_start = active_player_fields['queue_start']
-        final_start = active_player_fields['final_start']
-        possible_positions = []
-
-        # Calculate next position
-        next_position = (pos_from + int(card.rank)) % self.TOTAL_STEPS
-
-        # Checking if the player is crossing his "start"
-        if pos_from < queue_start:
-            if next_position >= queue_start:
-                next_position = final_start + (next_position - queue_start) - 1
-
-        possible_positions.append(next_position)
-
-        return possible_positions
-
     def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments
                                      final_area_end: int) -> bool: # pylint: disable=too-many-arguments
         """
@@ -797,14 +771,6 @@ class Dog(Game):
         # If both marbles are found, swap their positions
         if marble_from and marble_to:
             marble_from.pos, marble_to.pos = marble_to.pos, marble_from.pos
-
-    def _generate_seven_actions(self, marbles: List[Marble]) -> List[Action]:
-        """Generate all possible combinations of moves for card rank 7."""
-        possible_actions: list[Action] = []
-
-        for marble in marbles:
-            print(marble)
-        return possible_actions
 
     def _move_n_forward(self, marble: Marble, steps: int, queue_start: int, final_start: int) -> int:
         pos = (marble.pos + steps) % self.TOTAL_STEPS
