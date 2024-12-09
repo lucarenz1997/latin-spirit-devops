@@ -215,6 +215,10 @@ class Dog(Game):
             marbles_to_check = active_player.list_marble
             actions_for_player_with_marbles_to_check = self._state.idx_player_active
             self.active_player_has_finished = False
+        if self._state.card_active and self._state.card_active.rank == '7':
+
+            # self._state.card_active = None
+            return actions
 
         for card in cards: # pylint: disable=too-many-nested-blocks
             for marble in marbles_to_check:
@@ -259,9 +263,9 @@ class Dog(Game):
                         to_positions = self._calculate_position_to(
                             marble.pos, card, actions_for_player_with_marbles_to_check)  # simple calculations
 
-                    if card.rank == '7' or (self._state.card_active and self._state.card_active.rank == '7'):
-
-                        actions.extend(self._generate_seven_actions(marbles_to_check)) # remove card as param
+                    # if card.rank == '7':
+                    #
+                    #     actions.extend(self._generate_seven_actions(marbles_to_check)) # remove card as param
 
                     if card.rank == 'A':
                         # Move 1 spot forward
@@ -435,6 +439,7 @@ class Dog(Game):
 
     none_actions_counter = 0
     card_exchanges_counter = 0
+    seven_steps_counter = 0
 
     def apply_action(self, action: Action) -> None: # pylint: disable=too-many-locals, too-many-statements, redefined-outer-name, too-many-branches
         """ Apply the given action to the game """
@@ -442,24 +447,33 @@ class Dog(Game):
 
         self._handle_none_action(action, active_player)
 
-        if action is not None and action.card in active_player.list_card:
+        if action is not None: # pylint: disable=too-many-nested-blocks
             if action.card.rank == '7':
-                # Handle marble moves for card #7
-                if action.pos_from is not None and action.pos_to is not None:
-                    marble_to_move = next(
-                        (marble for marble in active_player.list_marble if marble.pos == action.pos_from), None
-                    )
+                if action.pos_to is not None and action.pos_from is not None:
+                    self.seven_steps_counter += abs(action.pos_to-action.pos_from) % self.TOTAL_STEPS
+                    if self.seven_steps_counter ==7:
+                        self.seven_steps_counter =0
+                        self._state.card_active = None
+                        self._state.idx_player_active = (self._state.idx_player_active + 1) % self._state.cnt_player
+                    else:
+                        self._state.card_active = action.card
+                    # Handle marble moves for card #7
+                    if action.pos_from is not None and action.pos_to is not None:
+                        marble_to_move = next(
+                            (marble for marble in active_player.list_marble if marble.pos == action.pos_from), None
+                        )
 
-                    if marble_to_move:
-                        # Detect marbles taken over during the move
-                        marbles_to_reset = self._get_marbles_between(action.pos_from, action.pos_to)
+                        if marble_to_move:
+                            # Detect marbles taken over during the move
+                            marbles_to_reset = self._get_marbles_between(action.pos_from, action.pos_to)
 
-                        for reset_marble in marbles_to_reset:
-                            self._reset_to_kennel(reset_marble)
+                            for reset_marble in marbles_to_reset:
+                                self._reset_to_kennel(reset_marble)
 
-                        # Move the active player's marble to its new position
-                        self._move_marble_logic(marble_to_move, action.pos_to,
-                                                is_player_finished=self.active_player_has_finished)
+                            # Move the active player's marble to its new position
+                            self._move_marble_logic(marble_to_move, action.pos_to,
+                                                    is_player_finished=self.active_player_has_finished)
+                return
 
             # card exchange with partner
             if (not self._state.bool_card_exchanged
