@@ -179,6 +179,7 @@ class TestDogBenchmark:
 
     def test_apply_action(self):
         """Test 009: Validate Dog.set_state method [5 points]"""
+        # Initialize the game state
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -187,10 +188,28 @@ class TestDogBenchmark:
             idx_player_started=0,
             idx_player_active=0,
             list_player=[
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x'),Card(rank='3', suit='x'),Card(rank='4', suit='x'),Card(rank='5', suit='x'),Card(rank='6', suit='x'),Card(rank='7', suit='x'),Card(rank='8', suit='x'), Card(rank='K', suit='x')], list_marble=[Marble(pos=1, is_save=False),Marble(pos=0, is_save=True),Marble(pos=68, is_save=True),Marble(pos=65, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=2, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=3, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=4, is_save=False)])
+                PlayerState(
+                    name='Player 1',
+                    list_card=[
+                        Card(rank='2', suit='x'), 
+                        Card(rank='3', suit='x'), 
+                        Card(rank='4', suit='x'), 
+                        Card(rank='5', suit='x'), 
+                        Card(rank='6', suit='x'), 
+                        Card(rank='7', suit='x'), 
+                        Card(rank='8', suit='x'), 
+                        Card(rank='9', suit='x')
+                    ],
+                    list_marble=[
+                        Marble(pos=1, is_save=False),
+                        Marble(pos=0, is_save=True),
+                        Marble(pos=68, is_save=True),
+                        Marble(pos=65, is_save=True)
+                    ]
+                ),
+                PlayerState(name='Player 2', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=2, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=3, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=4, is_save=False)])
             ],
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
@@ -198,11 +217,19 @@ class TestDogBenchmark:
         )
         self.game_server.set_state(game_state)
 
-        for i in range(2,10):
+        # Iterate through the player's cards and test marble movement
+        for card in self.game_server._state.list_player[0].list_card:
+            rank = int(card.rank)
+            initial_pos = self.game_server._state.list_player[0].list_marble[0].pos
 
-            self.game_server.apply_action(Action(card=Card(rank=str(i), suit='x'), pos_from=1, pos_to=3))
+            # Apply action
+            self.game_server.apply_action(Action(card=card, pos_from=initial_pos, pos_to=initial_pos + rank))
 
-        assert True
+            # Check the updated position of the marble
+            updated_pos = self.game_server._state.list_player[0].list_marble[0].pos
+            assert updated_pos == initial_pos + rank, f'Expected {initial_pos + rank}, got {updated_pos}'
+
+            
 
 
     def test_deal_cards_x(self):
@@ -295,8 +322,6 @@ class TestDogBenchmark:
         assert True
 
     def test_game_over(self):
-
-        """Test 009: Validate Dog.set_state method [5 points]"""
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -308,22 +333,22 @@ class TestDogBenchmark:
                 PlayerState(name='Player 1',
                             list_card=[],
                             list_marble=[Marble(pos=68, is_save=False), Marble(pos=69, is_save=True),
-                                         Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                                        Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
+                PlayerState(name='Player 2', list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=2, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=84, is_save=False), Marble(pos=85, is_save=True),
-                                         Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                                        Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)]),
+                PlayerState(name='Player 4', list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=4, is_save=False)])
             ],
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
             card_active=None
         )
-        self.game_server.apply_action(Action(card=Card(rank='K', suit='x'), pos_from=1, pos_to=3))  # collision
-
-        assert True
+        self.game_server._state = game_state  # Ensure game_server uses the correct game state
+        self.game_server._check_team_win()
+        assert self.game_server._state.phase == GamePhase.FINISHED, f'Expected phase to be FINISHED, got {self.game_server._state.phase}'
 
     def test_random_player(self):
         player = RandomPlayer()
