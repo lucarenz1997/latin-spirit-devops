@@ -71,6 +71,7 @@ class TestDogBenchmark:
         assert action.card == card
         assert action.pos_from == 1
         assert action.pos_to == 10
+        assert action.card_swap is None
 
     def test_GamePhase_class(self):
         """Test 006: Validate GamePhase class [1 point]"""
