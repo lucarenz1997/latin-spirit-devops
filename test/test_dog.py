@@ -70,6 +70,7 @@ class TestDogBenchmark:
         # Check attributes
         assert action.card == card
         assert action.pos_from == 1
+        assert action.pos_to == 10
 
     def test_GamePhase_class(self):
         """Test 006: Validate GamePhase class [1 point]"""
