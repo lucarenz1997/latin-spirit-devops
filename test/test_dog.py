@@ -67,6 +67,8 @@ class TestDogBenchmark:
         card = Card(suit="Hearts", rank="5")
         # Create an Action instance
         action = Action(card=card, pos_from=1, pos_to=10, card_swap=None)
+        # Check attributes
+        assert action.card == card
 
     def test_GamePhase_class(self):
         """Test 006: Validate GamePhase class [1 point]"""
