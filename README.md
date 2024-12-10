@@ -3,6 +3,8 @@
 The following commands are all ment to be executed in the root directory of the project.
 
 ## Mac/Linux
+<details>
+
 ### Run your Script
 ````
 source ../.venv/bin/activate
@@ -30,8 +32,11 @@ uvicorn server.py.main:app --reload
 ````
 Open up your browser and go to http://localhost:8000
 
+</details>
 
 ## Windows
+<details>
+
 ### Run your Script
 ````
 "../.venv\Scripts\activate"
@@ -63,3 +68,4 @@ python benchmark/benchmark_dog.py python dog.Dog
 uvicorn server.py.main:app --reload
 start chrome http://localhost:8000
 ````
+</details>
