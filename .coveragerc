@@ -1,0 +1,12 @@
+[run]
+source = 
+	server/py
+    
+
+[report]
+omit =
+	server/py/game.py
+	server\py\battleship.py      
+	server\py\hangman.py         
+	server\py\main.py           
+	server\py\uno.py

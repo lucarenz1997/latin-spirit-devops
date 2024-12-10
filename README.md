@@ -45,6 +45,9 @@ python server/py/dog.py
 
 ### Run the Benchmark
 ````
+# Windows Powershell
+$env:PYTHONPATH = (Get-Location).Path
+
 "../.venv\Scripts\activate"
 set PYTHONPATH=%cd%                    # in Command Prompt
 $env:PYTHONPATH = (Get-Location).Path  # in PowerShell
