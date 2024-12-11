@@ -894,6 +894,39 @@ class TestDogBenchmark:
         assert marble.pos == self.game_server.PLAYER_POSITIONS[3]['queue_start'] + 1, f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[3]["queue_start"] + 1}, got {marble.pos}'
         assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
 
-    
+    def test_refresh_deck(self):
+        """Test _refresh_deck method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=[],
+            list_card_discard=[Card(rank='A', suit='x'), Card(rank='2', suit='x')],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
 
+        # Call the _refresh_deck method
+        self.game_server._refresh_deck()
+
+        # Check if the draw pile has been refreshed and shuffled
+        assert len(self.game_server._state.list_card_draw) == len(GameState.LIST_CARD), \
+            f'Expected draw pile length to be {len(GameState.LIST_CARD)}, got {len(self.game_server._state.list_card_draw)}'
+        assert len(self.game_server._state.list_card_discard) == 0, \
+            f'Expected discard pile length to be 0, got {len(self.game_server._state.list_card_discard)}'
+
+        # Check if the draw pile is shuffled (not in the same order as LIST_CARD)
+        assert self.game_server._state.list_card_draw != GameState.LIST_CARD, \
+            'Expected draw pile to be shuffled, but it is in the same order as LIST_CARD'
+
+    
 # --- end of tests ---
