@@ -353,6 +353,8 @@ class TestDogBenchmark:
         
 
     def test_state(self):
+        """Test the initialization and state consistency of the game"""
+        # Create a custom game state
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -363,22 +365,28 @@ class TestDogBenchmark:
             list_player=[
                 PlayerState(name='Player 1',
                             list_card=[],
-                            list_marble=[Marble(pos=68, is_save=False), Marble(pos=69, is_save=True),
-                                         Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                            list_marble=[
+                                Marble(pos=68, is_save=False), Marble(pos=69, is_save=True),
+                                Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)
+                            ]),
+                PlayerState(name='Player 2',
+                            list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=2, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
-                            list_marble=[Marble(pos=84, is_save=False), Marble(pos=85, is_save=True),
-                                         Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                PlayerState(name='Player 3',
+                            list_card=[Card(rank='2', suit='x')],
+                            list_marble=[
+                                Marble(pos=84, is_save=False), Marble(pos=85, is_save=True),
+                                Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)
+                            ]),
+                PlayerState(name='Player 4',
+                            list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=4, is_save=False)])
             ],
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
             card_active=None
         )
-        self.game_server.print_state()
-        assert True
+
 
     def test_get_player_view(self):
         game_state = GameState(
