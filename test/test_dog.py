@@ -965,6 +965,42 @@ class TestDogBenchmark:
         result = self.game_server._is_way_blocked(pos_to=40, pos_from=30, safe_marbles=self.game_server._get_all_safe_marbles())
         assert result is True, f'Expected True, got {result}'
 
+    def test_is_valid_move_in_final_area(self):
+        """Test _is_valid_move_in_final_area method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=68, is_save=True), Marble(pos=69, is_save=True)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=72, is_save=True), Marble(pos=73, is_save=True)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=84, is_save=True), Marble(pos=85, is_save=True)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=88, is_save=True), Marble(pos=89, is_save=True)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
     
+        # Test case 1: Invalid move within the final area (jumping over a marble)
+        result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=71, marbles=game_state.list_player[0].list_marble, final_area_start=68, final_area_end=71)
+        assert result is False, f'1 Expected False, got {result}'
+
+        # Test case 2: Valid move outside the final area
+        result = self.game_server._is_valid_move_in_final_area(pos_from=60, pos_to=65, marbles=game_state.list_player[0].list_marble, final_area_start=68, final_area_end=71)
+        assert result is True, f'2 Expected True, got {result}'
+
+        # Test case 3: Invalid move within the final area (jumping over multiple marbles)
+        result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=72, marbles=game_state.list_player[0].list_marble + game_state.list_player[1].list_marble, final_area_start=68, final_area_end=75)
+        assert result is False, f'3 Expected False, got {result}'
+
+        # Test case 4: Valid move within the final area with no marbles in the way
+        result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=69, marbles=game_state.list_player[2].list_marble, final_area_start=68, final_area_end=71)
+        assert result is True, f'4 Expected True, got {result}'
 
 # --- end of tests ---
