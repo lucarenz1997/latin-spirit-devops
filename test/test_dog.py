@@ -744,6 +744,37 @@ class TestDogBenchmark:
             f'Expected next active player to be 1, got {self.game_server._state.idx_player_active}'
 
     
+    def test_apply_action_none_action(self):
+        """Test apply_action with None action"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='2', suit='x')],
+                    list_marble=[Marble(pos=1, is_save=False)]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        self.game_server.apply_action(None)
+
+        assert self.game_server.none_actions_counter == 1, \
+            f'Expected none_actions_counter to be 1, got {self.game_server.none_actions_counter}'
+        assert len(self.game_server._state.list_player[0].list_card) == 0, \
+            f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
 
 # --- end of tests ---
 
