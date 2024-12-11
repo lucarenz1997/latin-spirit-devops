@@ -928,5 +928,43 @@ class TestDogBenchmark:
         assert self.game_server._state.list_card_draw != GameState.LIST_CARD, \
             'Expected draw pile to be shuffled, but it is in the same order as LIST_CARD'
 
+    def test_is_way_blocked(self):
+        """Test _is_way_blocked method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=0, is_save=True), Marble(pos=5, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=16, is_save=True), Marble(pos=20, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=32, is_save=True), Marble(pos=35, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=48, is_save=True), Marble(pos=50, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: No marbles blocking the way
+        result = self.game_server._is_way_blocked(pos_to=10, pos_from=5, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is False, f'Expected False, got {result}'
+
+        # Test case 2: Marble blocking the way at position 16
+        result = self.game_server._is_way_blocked(pos_to=20, pos_from=5, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is True, f'Expected True, got {result}'
+
+        # Test case 3: Marble blocking the way at position 0 (circular board)
+        result = self.game_server._is_way_blocked(pos_to=65, pos_from=60, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is True, f'Expected True, got {result}'
+
+        # Test case 5: Marble blocking the way at position 32
+        result = self.game_server._is_way_blocked(pos_to=40, pos_from=30, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is True, f'Expected True, got {result}'
+
     
+
 # --- end of tests ---
