@@ -849,5 +849,51 @@ class TestDogBenchmark:
         selected_action = player.select_action(game_state, actions)
         assert selected_action in actions, f'Expected selected action to be one of {actions}, got {selected_action}'
 
+    def test_reset_to_kennel(self):
+        """Test _reset_to_kennel method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=10, is_save=False), Marble(pos=15, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=20, is_save=False), Marble(pos=25, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=30, is_save=False), Marble(pos=35, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=40, is_save=False), Marble(pos=45, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: Reset marble for Player 1
+        marble = self.game_server._state.list_player[0].list_marble[0]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[0]['queue_start'], f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[0]["queue_start"]}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+        # Test case 2: Reset marble for Player 2
+        marble = self.game_server._state.list_player[1].list_marble[1]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[1]['queue_start'] + 1, f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[1]["queue_start"] + 1}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+        # Test case 3: Reset marble for Player 3
+        marble = self.game_server._state.list_player[2].list_marble[0]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[2]['queue_start'], f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[2]["queue_start"]}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+        # Test case 4: Reset marble for Player 4
+        marble = self.game_server._state.list_player[3].list_marble[1]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[3]['queue_start'] + 1, f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[3]["queue_start"] + 1}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+    
 
 # --- end of tests ---
