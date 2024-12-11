@@ -403,8 +403,11 @@ class TestDogBenchmark:
             f'Expected Player 1 name, got {game_state.list_player[0].name}'
         assert len(game_state.list_card_draw) == len(GameState.LIST_CARD), \
             f'Expected {len(GameState.LIST_CARD)} cards in draw pile, got {len(game_state.list_card_draw)}'
+        assert game_state.phase == GamePhase.RUNNING, \
+            f'Expected phase to be RUNNING, got {game_state.phase}'
+        assert game_state.cnt_round == 1, \
+            f'Expected round to be 1, got {game_state.cnt_round}'
 
-        
     def test_get_player_view(self):
         game_state = GameState(
             cnt_player=4,
