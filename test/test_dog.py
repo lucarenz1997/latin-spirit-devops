@@ -707,7 +707,44 @@ class TestDogBenchmark:
         assert self.game_server._state.idx_player_active == 1, \
             f'Expected next active player to be 1, got {self.game_server._state.idx_player_active}'
 
+    def test_apply_action_card_exchange_with_partner_limit(self):
+        """Test apply_action with card exchange with partner limit"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='A', suit='x')],
+                    list_marble=[]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        self.game_server.card_exchanges_counter = 4
+
+        action = Action(card=Card(rank='A', suit='x'), pos_from=None, pos_to=None)
+        self.game_server.apply_action(action)
+
+        assert self.game_server._state.bool_card_exchanged is True, \
+            f'Expected bool_card_exchanged to be True, got {self.game_server._state.bool_card_exchanged}'
+        assert self.game_server.card_exchanges_counter == 0, \
+            f'Expected card_exchanges_counter to be 0, got {self.game_server.card_exchanges_counter}'
+        assert self.game_server._state.idx_player_active == 1, \
+            f'Expected next active player to be 1, got {self.game_server._state.idx_player_active}'
+
     
+
 # --- end of tests ---
 
 
