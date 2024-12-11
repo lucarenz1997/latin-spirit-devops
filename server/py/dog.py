@@ -244,20 +244,21 @@ class Dog(Game):
 
                                 # Handle JOKER acting as ACE or KING
                                 if card.rank == 'JKR':
-                                    # Joker acting as Ace
-                                    actions.append(Action(
-                                        card=card,
-                                        pos_from=None,
-                                        pos_to=None,
-                                        card_swap=Card(suit='♥', rank='A')
-                                    ))
-                                    # Joker acting as King
-                                    actions.append(Action(
-                                        card=card,
-                                        pos_from=None,
-                                        pos_to=None,
-                                        card_swap=Card(suit='♥', rank='K')
-                                    ))
+                                    for suit in GameState.LIST_SUIT:
+                                        # Joker acting as Ace
+                                        actions.append(Action(
+                                            card=card,
+                                            pos_from=None,
+                                            pos_to=None,
+                                            card_swap=Card(suit=suit, rank='A')
+                                        ))
+                                        # Joker acting as King
+                                        actions.append(Action(
+                                            card=card,
+                                            pos_from=None,
+                                            pos_to=None,
+                                            card_swap=Card(suit=suit, rank='K')
+                                        ))
                 else:
                     if card.rank.isdigit() and card.rank not in ['7', '4']:
                         to_positions = [self._move_n_forward(marble, int(card.rank), queue_start, final_start)]
@@ -378,13 +379,14 @@ class Dog(Game):
                         # Add Joker transformations for all other possible cards
 
                         for rank in GameState.LIST_RANK:
-                            if rank != 'JKR':  # Exclude the Joker itself
-                                actions.append(Action(
-                                    card=card,
-                                    pos_from=None,
-                                    pos_to=None,
-                                    card_swap=Card(suit='♥', rank=rank)
-                                ))
+                            for suit in GameState.LIST_SUIT:
+                                if rank != 'JKR':  # Exclude the Joker itself
+                                    actions.append(Action(
+                                        card=card,
+                                        pos_from=None,
+                                        pos_to=None,
+                                        card_swap=Card(suit=suit, rank=rank)
+                                    ))
 
                     # checks for each possible position if the way is blocked.
                     # if it is not blocked, we add it to act.
