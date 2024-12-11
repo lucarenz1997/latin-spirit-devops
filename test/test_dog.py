@@ -204,6 +204,7 @@ class TestDogBenchmark:
 
     def test_apply_action(self):
         """Test 009: Validate Dog.set_state method [5 points]"""
+        # Initialize the game state
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -212,10 +213,28 @@ class TestDogBenchmark:
             idx_player_started=0,
             idx_player_active=0,
             list_player=[
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x'),Card(rank='3', suit='x'),Card(rank='4', suit='x'),Card(rank='5', suit='x'),Card(rank='6', suit='x'),Card(rank='7', suit='x'),Card(rank='8', suit='x'), Card(rank='K', suit='x')], list_marble=[Marble(pos=1, is_save=False),Marble(pos=0, is_save=True),Marble(pos=68, is_save=True),Marble(pos=65, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=2, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=3, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=4, is_save=False)])
+                PlayerState(
+                    name='Player 1',
+                    list_card=[
+                        Card(rank='2', suit='x'), 
+                        Card(rank='3', suit='x'), 
+                        Card(rank='4', suit='x'), 
+                        Card(rank='5', suit='x'), 
+                        Card(rank='6', suit='x'), 
+                        Card(rank='7', suit='x'), 
+                        Card(rank='8', suit='x'), 
+                        Card(rank='9', suit='x')
+                    ],
+                    list_marble=[
+                        Marble(pos=1, is_save=False),
+                        Marble(pos=0, is_save=True),
+                        Marble(pos=68, is_save=True),
+                        Marble(pos=65, is_save=True)
+                    ]
+                ),
+                PlayerState(name='Player 2', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=2, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=3, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=4, is_save=False)])
             ],
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
@@ -223,11 +242,19 @@ class TestDogBenchmark:
         )
         self.game_server.set_state(game_state)
 
-        for i in range(2,10):
+        # Iterate through the player's cards and test marble movement
+        for card in self.game_server._state.list_player[0].list_card:
+            rank = int(card.rank)
+            initial_pos = self.game_server._state.list_player[0].list_marble[0].pos
 
-            self.game_server.apply_action(Action(card=Card(rank=str(i), suit='x'), pos_from=1, pos_to=3))
+            # Apply action
+            self.game_server.apply_action(Action(card=card, pos_from=initial_pos, pos_to=initial_pos + rank))
 
-        assert True
+            # Check the updated position of the marble
+            updated_pos = self.game_server._state.list_player[0].list_marble[0].pos
+            assert updated_pos == initial_pos + rank, f'Expected {initial_pos + rank}, got {updated_pos}'
+
+            
 
 
     def test_deal_cards_x(self):
@@ -315,13 +342,12 @@ class TestDogBenchmark:
             list_card_discard=[],
             card_active=None
         )
-        self.game_server.apply_action(None)  # collision
+        actions = self.game_server.get_list_action()
 
-        assert True
+        assert len(actions) > 0
+        
 
     def test_game_over(self):
-
-        """Test 009: Validate Dog.set_state method [5 points]"""
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -333,28 +359,27 @@ class TestDogBenchmark:
                 PlayerState(name='Player 1',
                             list_card=[],
                             list_marble=[Marble(pos=68, is_save=False), Marble(pos=69, is_save=True),
-                                         Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                                        Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
+                PlayerState(name='Player 2', list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=2, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=84, is_save=False), Marble(pos=85, is_save=True),
-                                         Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                                        Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)]),
+                PlayerState(name='Player 4', list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=4, is_save=False)])
             ],
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
             card_active=None
         )
-        self.game_server.apply_action(Action(card=Card(rank='K', suit='x'), pos_from=1, pos_to=3))  # collision
-
-        assert True
-
-    def test_random_player(self):
-        player = RandomPlayer()
-        assert True
+        self.game_server._state = game_state  # Ensure game_server uses the correct game state
+        self.game_server._check_team_win()
+        assert self.game_server._state.phase == GamePhase.FINISHED, f'Expected phase to be FINISHED, got {self.game_server._state.phase}'
+        
 
     def test_state(self):
+        """Test the initialization and state consistency of the game"""
+        # Create a custom game state
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -365,24 +390,55 @@ class TestDogBenchmark:
             list_player=[
                 PlayerState(name='Player 1',
                             list_card=[],
-                            list_marble=[Marble(pos=68, is_save=False), Marble(pos=69, is_save=True),
-                                         Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                            list_marble=[
+                                Marble(pos=68, is_save=False), Marble(pos=69, is_save=True),
+                                Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)
+                            ]),
+                PlayerState(name='Player 2',
+                            list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=2, is_save=False)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
-                            list_marble=[Marble(pos=84, is_save=False), Marble(pos=85, is_save=True),
-                                         Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)]),
-                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')],
+                PlayerState(name='Player 3',
+                            list_card=[Card(rank='2', suit='x')],
+                            list_marble=[
+                                Marble(pos=84, is_save=False), Marble(pos=85, is_save=True),
+                                Marble(pos=86, is_save=True), Marble(pos=87, is_save=True)
+                            ]),
+                PlayerState(name='Player 4',
+                            list_card=[Card(rank='2', suit='x')],
                             list_marble=[Marble(pos=4, is_save=False)])
             ],
             list_card_draw=GameState.LIST_CARD.copy(),
             list_card_discard=[],
             card_active=None
         )
-        self.game_server.print_state()
-        assert True
+        # Set the game state
+        self.game_server.set_state(game_state)
 
-    def test_player_view(self):
+        # Check if the game server's state matches the initialized game state
+        assert self.game_server.get_state() == game_state, \
+        f'Expected state to match the initialized state, but got {self.game_server.get_state()}'
+
+        # Validate the printed state (using print_state for visual inspection)
+        self.game_server.print_state()
+
+        # Perform specific assertions
+        assert len(game_state.list_player) == 4, \
+            f'Expected 4 players in the game, got {len(game_state.list_player)}'
+        assert game_state.list_player[0].name == 'Player 1', \
+            f'Expected Player 1 name, got {game_state.list_player[0].name}'
+        assert len(game_state.list_card_draw) == len(GameState.LIST_CARD), \
+            f'Expected {len(GameState.LIST_CARD)} cards in draw pile, got {len(game_state.list_card_draw)}'
+        assert game_state.phase == GamePhase.RUNNING, \
+            f'Expected phase to be RUNNING, got {game_state.phase}'
+        assert game_state.cnt_round == 1, \
+            f'Expected round to be 1, got {game_state.cnt_round}'
+        # Example check for a marble's position and state
+        assert game_state.list_player[0].list_marble[0].pos == 68, \
+            f'Expected marble at position 68, got {game_state.list_player[0].list_marble[0].pos}'
+        assert game_state.list_player[0].list_marble[0].is_save is False, \
+            f'Expected marble save state to be False, got {game_state.list_player[0].list_marble[0].is_save}'
+
+    def test_get_player_view(self):
         game_state = GameState(
             cnt_player=4,
             phase=GamePhase.RUNNING,
@@ -409,11 +465,6 @@ class TestDogBenchmark:
         )
         self.game_server.get_player_view(0)
         assert True
-
-
-
-
-
 
         self.game_server.set_state(game_state)
         assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
@@ -442,8 +493,539 @@ class TestDogBenchmark:
         self.game_server.print_state()
         assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
 
+    def test_get_list_action_no_card_exchanged(self):
+        """Test get_list_action when no card has been exchanged"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='A', suit='x')], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='w')], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        assert len(actions) == 1
 
+    def test_get_list_action_card_exchanged(self):
+        """Test get_list_action when a card has been exchanged"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='A', suit='x')], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[Card(rank='2', suit='w')], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        assert len(actions) > 0 # At least one action should be available
+
+    def test_get_list_action_player_finished(self):
+        """Test get_list_action when the active player has finished"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='A', suit='x')], list_marble=[Marble(pos=68, is_save=True), Marble(pos=69, is_save=True), Marble(pos=70, is_save=True), Marble(pos=71, is_save=True)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        assert len(actions) == 0
+
+    def test_all_cards_actions(self):
+        card_list = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+        """Test get_list_action when the active player has all cards"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        # Add all cards to the player[0] from suit '♥'
+        for card in card_list:
+            game_state.list_player[0].list_card.append(Card(rank=card, suit='♥'))
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        assert len(actions) >= len(card_list)
+
+        # test all cards have atleast 1 action individually
+        self.game_server.set_state(game_state)
+        for card in card_list:
+            game_state.list_player[0].list_card.append(Card(rank=card, suit='♥'))
+            actions = self.game_server.get_list_action()
+            assert len(actions) >= 1, f'Expected at least 1 action with card {card}, got {len(actions)}'
+
+    def test_get_marbles_between(self):
+        """Test _get_marbles_between method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False), Marble(pos=5, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=8, is_save=False), Marble(pos=12, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=10, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=15, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: No marbles between pos_from and pos_to
+        marbles = self.game_server._get_marbles_between(1, 2)
+        assert len(marbles) == 0, f'Expected 0 marbles, got {len(marbles)}'
+
+        # Test case 2: One marble between pos_from and pos_to
+        marbles = self.game_server._get_marbles_between(1, 6)
+        assert len(marbles) == 1, f'Expected 1 marble, got {len(marbles)}'
+        assert marbles[0].pos == 5, f'Expected marble at pos 5, got {marbles[0].pos}'
+
+        # Test case 3: Multiple marbles between pos_from and pos_to
+        marbles = self.game_server._get_marbles_between(1, 8)
+        assert len(marbles) == 2, f'Expected 2 marbles, got {len(marbles)}'
+        assert marbles[0].pos == 5, f'Expected marble at pos 5, got {marbles[0].pos}'
+        assert marbles[1].pos == 8, f'Expected marble at pos 8, got {marbles[1].pos}'
+
+    def test_apply_action_card_7(self):
+        """Test apply_action with card rank 7"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='7', suit='x')],
+                    list_marble=[Marble(pos=1, is_save=False)]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        action = Action(card=Card(rank='7', suit='x'), pos_from=1, pos_to=8)
+        self.game_server.apply_action(action)
+
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 8, \
+            f'Expected marble position to be 8, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        
+    def test_apply_action_card_exchange(self):
+        """Test apply_action with card exchange"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='A', suit='x')],
+                    list_marble=[]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        action = Action(card=Card(rank='A', suit='x'), pos_from=None, pos_to=None)
+        self.game_server.apply_action(action)
+
+        assert len(self.game_server._state.list_player[2].list_card) == 1, \
+            f'Expected partner to have 1 card, got {len(self.game_server._state.list_player[2].list_card)}'
+        assert len(self.game_server._state.list_player[0].list_card) == 0, \
+            f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
+
+    
+    def test_apply_action_card_exchange_with_partner(self):
+        """Test apply_action with card exchange with partner"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='A', suit='x')],
+                    list_marble=[]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        action = Action(card=Card(rank='A', suit='x'), pos_from=None, pos_to=None)
+        self.game_server.apply_action(action)
+
+        assert len(self.game_server._state.list_player[2].list_card) == 1, \
+            f'Expected partner to have 1 card, got {len(self.game_server._state.list_player[2].list_card)}'
+        assert len(self.game_server._state.list_player[0].list_card) == 0, \
+            f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
+        assert self.game_server._state.idx_player_active == 1, \
+            f'Expected next active player to be 1, got {self.game_server._state.idx_player_active}'
+
+    def test_apply_action_card_exchange_with_partner_limit(self):
+        """Test apply_action with card exchange with partner limit"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='A', suit='x')],
+                    list_marble=[]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        self.game_server.card_exchanges_counter = 4
+
+        action = Action(card=Card(rank='A', suit='x'), pos_from=None, pos_to=None)
+        self.game_server.apply_action(action)
+
+        assert self.game_server._state.bool_card_exchanged is True, \
+            f'Expected bool_card_exchanged to be True, got {self.game_server._state.bool_card_exchanged}'
+        assert self.game_server.card_exchanges_counter == 0, \
+            f'Expected card_exchanges_counter to be 0, got {self.game_server.card_exchanges_counter}'
+        assert self.game_server._state.idx_player_active == 1, \
+            f'Expected next active player to be 1, got {self.game_server._state.idx_player_active}'
+
+    
+    def test_apply_action_none_action(self):
+        """Test apply_action with None action"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='2', suit='x')],
+                    list_marble=[Marble(pos=1, is_save=False)]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        self.game_server.apply_action(None)
+
+        assert self.game_server.none_actions_counter == 1, \
+            f'Expected none_actions_counter to be 1, got {self.game_server.none_actions_counter}'
+        assert len(self.game_server._state.list_player[0].list_card) == 0, \
+            f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
+
+    def test_swap_marbles(self):
+        """Test _swap_marbles method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False), Marble(pos=5, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=8, is_save=False), Marble(pos=12, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=10, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=15, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: Swap marbles within the same player
+        action = Action(card=Card(rank='J', suit='x'), pos_from=1, pos_to=5)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
+
+        # Test case 2: Swap marbles between different players
+        action = Action(card=Card(rank='J', suit='x'), pos_from=8, pos_to=10)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[1].list_marble[0].pos == 10, f'Expected marble at pos 10, got {self.game_server._state.list_player[1].list_marble[0].pos}'
+        assert self.game_server._state.list_player[2].list_marble[0].pos == 8, f'Expected marble at pos 8, got {self.game_server._state.list_player[2].list_marble[0].pos}'
+
+        # Test case 3: Swap marbles where one marble is not found
+        action = Action(card=Card(rank='J', suit='x'), pos_from=1, pos_to=20)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
+
+        # Test case 4: Swap marbles where both marbles are not found
+        action = Action(card=Card(rank='J', suit='x'), pos_from=20, pos_to=30)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
+
+    def test_random_player_select_action(self):
+        """Test RandomPlayer's select_action method"""
+        player = RandomPlayer()
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        actions = [
+            Action(card=Card(rank='2', suit='x'), pos_from=1, pos_to=3),
+            Action(card=Card(rank='3', suit='x'), pos_from=1, pos_to=4)
+        ]
+
+        selected_action = player.select_action(game_state, actions)
+        assert selected_action in actions, f'Expected selected action to be one of {actions}, got {selected_action}'
+
+    def test_reset_to_kennel(self):
+        """Test _reset_to_kennel method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=10, is_save=False), Marble(pos=15, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=20, is_save=False), Marble(pos=25, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=30, is_save=False), Marble(pos=35, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=40, is_save=False), Marble(pos=45, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: Reset marble for Player 1
+        marble = self.game_server._state.list_player[0].list_marble[0]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[0]['queue_start'], f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[0]["queue_start"]}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+        # Test case 2: Reset marble for Player 2
+        marble = self.game_server._state.list_player[1].list_marble[1]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[1]['queue_start'] + 1, f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[1]["queue_start"] + 1}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+        # Test case 3: Reset marble for Player 3
+        marble = self.game_server._state.list_player[2].list_marble[0]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[2]['queue_start'], f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[2]["queue_start"]}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+        # Test case 4: Reset marble for Player 4
+        marble = self.game_server._state.list_player[3].list_marble[1]
+        self.game_server._reset_to_kennel(marble)
+        assert marble.pos == self.game_server.PLAYER_POSITIONS[3]['queue_start'] + 1, f'Expected marble position to be {self.game_server.PLAYER_POSITIONS[3]["queue_start"] + 1}, got {marble.pos}'
+        assert marble.is_save is True, f'Expected marble to be safe, got {marble.is_save}'
+
+    def test_refresh_deck(self):
+        """Test _refresh_deck method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=[],
+            list_card_discard=[Card(rank='A', suit='x'), Card(rank='2', suit='x')],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Call the _refresh_deck method
+        self.game_server._refresh_deck()
+
+        # Check if the draw pile has been refreshed and shuffled
+        assert len(self.game_server._state.list_card_draw) == len(GameState.LIST_CARD), \
+            f'Expected draw pile length to be {len(GameState.LIST_CARD)}, got {len(self.game_server._state.list_card_draw)}'
+        assert len(self.game_server._state.list_card_discard) == 0, \
+            f'Expected discard pile length to be 0, got {len(self.game_server._state.list_card_discard)}'
+
+        # Check if the draw pile is shuffled (not in the same order as LIST_CARD)
+        assert self.game_server._state.list_card_draw != GameState.LIST_CARD, \
+            'Expected draw pile to be shuffled, but it is in the same order as LIST_CARD'
+
+    def test_is_way_blocked(self):
+        """Test _is_way_blocked method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=0, is_save=True), Marble(pos=5, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=16, is_save=True), Marble(pos=20, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=32, is_save=True), Marble(pos=35, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=48, is_save=True), Marble(pos=50, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: No marbles blocking the way
+        result = self.game_server._is_way_blocked(pos_to=10, pos_from=5, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is False, f'Expected False, got {result}'
+
+        # Test case 2: Marble blocking the way at position 16
+        result = self.game_server._is_way_blocked(pos_to=20, pos_from=5, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is True, f'Expected True, got {result}'
+
+        # Test case 3: Marble blocking the way at position 0 (circular board)
+        result = self.game_server._is_way_blocked(pos_to=65, pos_from=60, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is True, f'Expected True, got {result}'
+
+        # Test case 5: Marble blocking the way at position 32
+        result = self.game_server._is_way_blocked(pos_to=40, pos_from=30, safe_marbles=self.game_server._get_all_safe_marbles())
+        assert result is True, f'Expected True, got {result}'
+
+    def test_is_valid_move_in_final_area(self):
+        """Test _is_valid_move_in_final_area method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=68, is_save=True), Marble(pos=69, is_save=True)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=72, is_save=True), Marble(pos=73, is_save=True)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=84, is_save=True), Marble(pos=85, is_save=True)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=88, is_save=True), Marble(pos=89, is_save=True)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+    
+        # Test case 1: Invalid move within the final area (jumping over a marble)
+        result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=71, marbles=game_state.list_player[0].list_marble, final_area_start=68, final_area_end=71)
+        assert result is False, f'1 Expected False, got {result}'
+
+        # Test case 2: Valid move outside the final area
+        result = self.game_server._is_valid_move_in_final_area(pos_from=60, pos_to=65, marbles=game_state.list_player[0].list_marble, final_area_start=68, final_area_end=71)
+        assert result is True, f'2 Expected True, got {result}'
+
+        # Test case 3: Invalid move within the final area (jumping over multiple marbles)
+        result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=72, marbles=game_state.list_player[0].list_marble + game_state.list_player[1].list_marble, final_area_start=68, final_area_end=75)
+        assert result is False, f'3 Expected False, got {result}'
+
+        # Test case 4: Valid move within the final area with no marbles in the way
+        result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=69, marbles=game_state.list_player[2].list_marble, final_area_start=68, final_area_end=71)
+        assert result is True, f'4 Expected True, got {result}'
 
 # --- end of tests ---
-
-
