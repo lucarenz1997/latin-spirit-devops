@@ -386,6 +386,8 @@ class TestDogBenchmark:
             list_card_discard=[],
             card_active=None
         )
+        # Set the game state
+        self.game_server.set_state(game_state)
 
 
     def test_get_player_view(self):
