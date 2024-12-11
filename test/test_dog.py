@@ -821,6 +821,33 @@ class TestDogBenchmark:
         assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
         assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
 
+    def test_random_player_select_action(self):
+        """Test RandomPlayer's select_action method"""
+        player = RandomPlayer()
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[Card(rank='2', suit='x')], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        actions = [
+            Action(card=Card(rank='2', suit='x'), pos_from=1, pos_to=3),
+            Action(card=Card(rank='3', suit='x'), pos_from=1, pos_to=4)
+        ]
+
+        selected_action = player.select_action(game_state, actions)
+        assert selected_action in actions, f'Expected selected action to be one of {actions}, got {selected_action}'
+
+
 # --- end of tests ---
-
-
