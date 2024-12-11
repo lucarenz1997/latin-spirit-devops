@@ -399,6 +399,8 @@ class TestDogBenchmark:
         # Perform specific assertions
         assert len(game_state.list_player) == 4, \
             f'Expected 4 players in the game, got {len(game_state.list_player)}'
+        assert game_state.list_player[0].name == 'Player 1', \
+            f'Expected Player 1 name, got {game_state.list_player[0].name}'
 
     def test_get_player_view(self):
         game_state = GameState(
