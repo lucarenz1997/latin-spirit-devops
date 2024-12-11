@@ -607,8 +607,7 @@ class TestDogBenchmark:
         assert marbles[0].pos == 5, f'Expected marble at pos 5, got {marbles[0].pos}'
         assert marbles[1].pos == 8, f'Expected marble at pos 8, got {marbles[1].pos}'
 
-    
-    
+
 # --- end of tests ---
 
 
