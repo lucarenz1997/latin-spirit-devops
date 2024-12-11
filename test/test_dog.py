@@ -410,6 +410,8 @@ class TestDogBenchmark:
         # Example check for a marble's position and state
         assert game_state.list_player[0].list_marble[0].pos == 68, \
             f'Expected marble at position 68, got {game_state.list_player[0].list_marble[0].pos}'
+        assert game_state.list_player[0].list_marble[0].is_save is False, \
+            f'Expected marble save state to be False, got {game_state.list_player[0].list_marble[0].is_save}'
 
     def test_get_player_view(self):
         game_state = GameState(
