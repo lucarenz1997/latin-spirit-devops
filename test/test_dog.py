@@ -776,6 +776,51 @@ class TestDogBenchmark:
         assert len(self.game_server._state.list_player[0].list_card) == 0, \
             f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
 
+    def test_swap_marbles(self):
+        """Test _swap_marbles method"""
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=False,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False), Marble(pos=5, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=8, is_save=False), Marble(pos=12, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[Marble(pos=10, is_save=False)]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[Marble(pos=15, is_save=False)])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Test case 1: Swap marbles within the same player
+        action = Action(card=Card(rank='J', suit='x'), pos_from=1, pos_to=5)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
+
+        # Test case 2: Swap marbles between different players
+        action = Action(card=Card(rank='J', suit='x'), pos_from=8, pos_to=10)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[1].list_marble[0].pos == 10, f'Expected marble at pos 10, got {self.game_server._state.list_player[1].list_marble[0].pos}'
+        assert self.game_server._state.list_player[2].list_marble[0].pos == 8, f'Expected marble at pos 8, got {self.game_server._state.list_player[2].list_marble[0].pos}'
+
+        # Test case 3: Swap marbles where one marble is not found
+        action = Action(card=Card(rank='J', suit='x'), pos_from=1, pos_to=20)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
+
+        # Test case 4: Swap marbles where both marbles are not found
+        action = Action(card=Card(rank='J', suit='x'), pos_from=20, pos_to=30)
+        self.game_server._swap_marbles(action)
+        assert self.game_server._state.list_player[0].list_marble[0].pos == 5, f'Expected marble at pos 5, got {self.game_server._state.list_player[0].list_marble[0].pos}'
+        assert self.game_server._state.list_player[0].list_marble[1].pos == 1, f'Expected marble at pos 1, got {self.game_server._state.list_player[0].list_marble[1].pos}'
+
 # --- end of tests ---
 
 
