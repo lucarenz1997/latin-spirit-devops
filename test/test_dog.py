@@ -407,6 +407,9 @@ class TestDogBenchmark:
             f'Expected phase to be RUNNING, got {game_state.phase}'
         assert game_state.cnt_round == 1, \
             f'Expected round to be 1, got {game_state.cnt_round}'
+        # Example check for a marble's position and state
+        assert game_state.list_player[0].list_marble[0].pos == 68, \
+            f'Expected marble at position 68, got {game_state.list_player[0].list_marble[0].pos}'
 
     def test_get_player_view(self):
         game_state = GameState(
