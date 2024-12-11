@@ -389,6 +389,10 @@ class TestDogBenchmark:
         # Set the game state
         self.game_server.set_state(game_state)
 
+        # Check if the game server's state matches the initialized game state
+        assert self.game_server.get_state() == game_state, \
+        f'Expected state to match the initialized state, but got {self.game_server.get_state()}'
+
 
     def test_get_player_view(self):
         game_state = GameState(
