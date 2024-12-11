@@ -393,6 +393,9 @@ class TestDogBenchmark:
         assert self.game_server.get_state() == game_state, \
         f'Expected state to match the initialized state, but got {self.game_server.get_state()}'
 
+        # Validate the printed state (using print_state for visual inspection)
+        self.game_server.print_state()
+
 
     def test_get_player_view(self):
         game_state = GameState(
