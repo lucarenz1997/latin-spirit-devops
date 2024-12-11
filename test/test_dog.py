@@ -396,6 +396,9 @@ class TestDogBenchmark:
         # Validate the printed state (using print_state for visual inspection)
         self.game_server.print_state()
 
+        # Perform specific assertions
+        assert len(game_state.list_player) == 4, \
+            f'Expected 4 players in the game, got {len(game_state.list_player)}'
 
     def test_get_player_view(self):
         game_state = GameState(
