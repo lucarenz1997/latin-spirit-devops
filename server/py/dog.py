@@ -693,7 +693,7 @@ class Dog(Game):
 
         return False  # No safe marble is blocking the path
 
-    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments  # pylint: disable=too-many-arguments
+    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments  # pylint: disable=too-many-positional-arguments
                                      final_area_end: int) -> bool: # pylint: disable=too-many-arguments
         """
         Validates whether a move in the final area is legal based on game rules.
