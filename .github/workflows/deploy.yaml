@@ -35,6 +35,5 @@ jobs:
         run: ls -la
       - name: Build and Deploy to Cloud Run
         run: |
-          gcloud builds submit -t gcr.io/${{ secrets.PROJECT_ID }}/myapp .
-          gcloud run deploy myapp --image gcr.io/${{ secrets.PROJECT_ID }}/myapp --platform managed --allow-unauthenticated
+          gcloud run deploy game-server-service-from-command-line --port 8080 --source . --allow-unauthenticated
       
