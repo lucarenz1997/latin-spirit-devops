@@ -35,7 +35,7 @@ jobs:
       - name: Set up Google Cloud SDK
         run: |
           gcloud config set project ${{ secrets.PROJECT_ID }}
-#          gcloud config set compute/zone ${{ secrets.ZONE }}
+          gcloud config set compute/zone ${{ secrets.ZONE }}
           gcloud config set run/region europe-west6
       - name: List files recursively
         run: find . -type f
