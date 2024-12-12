@@ -138,7 +138,7 @@ class Dog(Game):
     def __init__(self) -> None:
         """ Game initialization (set_state call not necessary, we expect 4 players) """
         super().__init__()
-        self._state = GameState(
+        self._state = GameState(  # type: ignore #type:unused-ignore
             phase=GamePhase.RUNNING,
             cnt_round=1,
             bool_game_finished=False,
