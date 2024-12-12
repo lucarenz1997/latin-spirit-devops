@@ -4,7 +4,9 @@ ignore=.ipynb_checkpoints
 [MESSAGES CONTROL]
 disable=missing-module-docstring, 
         missing-class-docstring,
-        missing-function-docstring
+        missing-function-docstring,
+        too-many-arguments,
+        too-many-positional-arguments
 
 [FORMAT]
 max-line-length=120
