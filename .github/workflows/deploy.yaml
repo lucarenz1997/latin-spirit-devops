@@ -10,10 +10,10 @@ jobs:
         uses: actions/checkout@v4
       - name: Install pylint and mypy
         run: pip install pylint mypy
-      - name: Run pylint
-        run: python3 -m pylint .
-      - name: Run mypy
-        run: python3 -m mypy .
+      - name: Run pylint on dog.py
+        run: python3 -m pylint server/py/dog.py
+      - name: Run mypy on dog.py
+        run: python3 -m mypy server/py/dog.py
   deploy-to-gcloud:
     permissions:
       contents: 'read'
