@@ -2,12 +2,12 @@ from abc import ABCMeta, abstractmethod
 from typing import List, Any
 
 
-GameState = Any # TODO LATIN-13
-GameAction = Any # TODO not sure what to do with this. is it an enum of "TAKING OVER" ,etc? LATIN-14
+GameState = Any
+GameAction = Any
 
 class Game(metaclass=ABCMeta):
     def __init__(self) -> None:
-        self._state: GameState = None # TODO LATIN-13
+        self._state: GameState = None
         self._actions: List[GameAction] = []
 
     @abstractmethod
@@ -33,13 +33,11 @@ class Game(metaclass=ABCMeta):
     @abstractmethod
     def apply_action(self, action: GameAction) -> None:
         """ Apply the given action to the game """
-        # TODO LATIN-27
         pass
 
     @abstractmethod
     def get_player_view(self, idx_player: int) -> GameState:
         """ Get the masked state for the active player (e.g. the opponent's cards are face down)"""
-        # TODO LATIN-28
         pass
 
 
