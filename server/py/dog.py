@@ -2,12 +2,12 @@ import random
 from enum import Enum
 from typing import List, Optional, ClassVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel # pylint: disable=import-error
 
 from server.py.game import Game, Player # pylint: disable=import-error
 
 
-class Card(BaseModel):
+class Card(BaseModel): # pylint: disable=too-few-public-methods
     suit: str  # card suit (color)
     rank: str  # card rank
 
@@ -16,18 +16,18 @@ class Card(BaseModel):
             self.rank < card.rank
 
 
-class Marble(BaseModel):
+class Marble(BaseModel): # pylint: disable=too-few-public-methods
     pos: int  # position on board (0 to 95)
     is_save: bool  # true if marble was moved out of kennel and was not yet moved
 
 
-class PlayerState(BaseModel):
+class PlayerState(BaseModel): # pylint: disable=too-few-public-methods
     name: str  # name of player
     list_card: List[Card]  # list of cards
     list_marble: List[Marble]  # list of marbles
 
 
-class Action(BaseModel):
+class Action(BaseModel): # pylint: disable=too-few-public-methods
     card: Card  # card to play
     pos_from: Optional[int]  # position to move the marble from
     pos_to: Optional[int]  # position to move the marble to
@@ -40,7 +40,7 @@ class GamePhase(str, Enum):
     FINISHED = 'finished'  # when the game is finished
 
 
-class GameState(BaseModel):
+class GameState(BaseModel): # pylint: disable=too-few-public-methods
     LIST_SUIT: ClassVar[List[str]] = ['♠', '♥', '♦', '♣']  # 4 suits (colors)
     LIST_RANK: ClassVar[List[str]] = [
         '2', '3', '4', '5', '6', '7', '8', '9', '10',  # 13 ranks + Joker
@@ -693,7 +693,7 @@ class Dog(Game):
 
         return False  # No safe marble is blocking the path
 
-    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments
+    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments, too-many-positional-arguments
                                      final_area_end: int) -> bool: # pylint: disable=too-many-arguments
         """
         Validates whether a move in the final area is legal based on game rules.
@@ -778,7 +778,7 @@ class Dog(Game):
             pos = final_start + (pos - queue_start) - 1
         return pos
 
-class RandomPlayer(Player): # pylint: disable=too-few-public-methods)
+class RandomPlayer(Player): # pylint: disable=too-few-public-methods
 
     def select_action(self, state: GameState, actions: List[Action]) -> Optional[Action]: # pylint: disable=unused-argument
         """ Given masked game state and possible actions, select the next action """
