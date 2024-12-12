@@ -32,7 +32,10 @@ jobs:
         run: |
           gcloud config set project ${{ secrets.PROJECT_ID }}
           gcloud config set compute/zone ${{ secrets.ZONE }}
+      - name: List files
+        run: ls -la
       - name: Build and Deploy to Cloud Run
         run: |
-          gcloud builds submit --tag gcr.io/${{ secrets.PROJECT_ID }}/myapp .
+          gcloud builds submit --tag gcr.io/${{ secrets.PROJECT_ID }}/myapp . --dockerfile=Dockerfile
           gcloud run deploy myapp --image gcr.io/${{ secrets.PROJECT_ID }}/myapp --platform managed --allow-unauthenticated
+      
