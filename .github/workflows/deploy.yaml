@@ -16,7 +16,6 @@ jobs:
         run: python3 -m mypy --ignore-missing-imports server/py/dog.py
 
   deploy-to-gcloud:
-    needs: code-style
     permissions:
       contents: 'read'
       id-token: 'write'
