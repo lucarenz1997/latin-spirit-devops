@@ -31,9 +31,10 @@ jobs:
         run: |
           gcloud config set project ${{ secrets.PROJECT_ID }}
           gcloud config set compute/zone ${{ secrets.ZONE }}
+          gcloud config set run/region europe-west6
       - name: List files
         run: ls -la
       - name: Build and Deploy to Cloud Run
         run: |
-          gcloud run deploy game-server-service-from-command-line --region 22 --port 8080 --source . --allow-unauthenticated
+          gcloud run deploy game-server-service-from-command-line --port 8080 --source . --allow-unauthenticated
       
