@@ -4,7 +4,7 @@ from typing import List, Optional, ClassVar
 
 from pydantic import BaseModel # pylint: disable=import-error
 
-from server.py.game import Game, Player # pylint: disable=import-error
+from server.py.game import Game, Player # pylint: disable=import-error #mypy ignore:import-not-found
 
 
 class Card(BaseModel): # pylint: disable=too-few-public-methods
@@ -138,7 +138,7 @@ class Dog(Game):
     def __init__(self) -> None:
         """ Game initialization (set_state call not necessary, we expect 4 players) """
         super().__init__()
-        self._state = GameState(  # type: ignore
+        self._state = GameState(  # type: ignore #type:unused-ignore
             phase=GamePhase.RUNNING,
             cnt_round=1,
             bool_game_finished=False,
@@ -693,7 +693,7 @@ class Dog(Game):
 
         return False  # No safe marble is blocking the path
 
-    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments, too-many-positional-arguments
+    def _is_valid_move_in_final_area(self, pos_from: int, pos_to: int, marbles: list[Marble], final_area_start: int, # pylint: disable=too-many-arguments
                                      final_area_end: int) -> bool: # pylint: disable=too-many-arguments
         """
         Validates whether a move in the final area is legal based on game rules.
