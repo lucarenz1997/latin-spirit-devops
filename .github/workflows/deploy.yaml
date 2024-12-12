@@ -39,6 +39,12 @@ jobs:
           gcloud config set run/region europe-west6
       - name: List files recursively
         run: find . -type f
+      - name: Print GitHub workspace path
+        run: echo "Workspace path is $GITHUB_WORKSPACE"
+      - name: List contents of GitHub workspace
+        run: ls -la $GITHUB_WORKSPACE
+      - name: Check detailed contents recursively in workspace
+        run: find $GITHUB_WORKSPACE -type f
       - name: Build and Deploy to Cloud Run
         run: |
           gcloud run deploy game-server-service-from-command-line --port 8080 --source . --allow-unauthenticated
