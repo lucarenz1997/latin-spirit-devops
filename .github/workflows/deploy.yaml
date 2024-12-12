@@ -36,5 +36,5 @@ jobs:
         run: ls -la
       - name: Build and Deploy to Cloud Run
         run: |
-          gcloud run deploy game-server-service-from-command-line --port 8080 --source . --allow-unauthenticated --buildpacks="gcr.io/buildpacks/python3"
+          gcloud run deploy game-server-service-from-command-line --port 8080 --source . --allow-unauthenticated
       
