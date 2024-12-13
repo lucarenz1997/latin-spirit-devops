@@ -51,5 +51,5 @@ jobs:
         run: find $GITHUB_WORKSPACE -type f
       - name: Build and Deploy to Cloud Run
         run: |
-          gcloud run deploy game-server-service-from-command-line --port 8080 --source . --allow-unauthenticated
+          gcloud run deploy game-server-service-from-github-action --port 8080 --source . --allow-unauthenticated
       
