@@ -418,7 +418,45 @@ class TestDogBenchmark:
         assert self.game_server.get_state() == game_state, f'Expected {game_state}, got {self.game_server.get_state()}'
 
 
+def test_collision_detection():
+    """Test: Validate Dog._is_collision method"""
 
-# --- end of tests ---
+    # Initialize the game state
+    game_state = GameState(
+        cnt_player=4,
+        phase=GamePhase.RUNNING,
+        cnt_round=1,
+        bool_card_exchanged=False,
+        idx_player_started=0,
+        idx_player_active=0,
+        list_player=[
+            PlayerState(name='Player 1', list_card=[], list_marble=[
+                Marble(pos=5, is_save=False),  # Unsafe marble at position 5
+                Marble(pos=10, is_save=True)  # Safe marble at position 10
+            ]),
+            PlayerState(name='Player 2', list_card=[], list_marble=[
+                Marble(pos=15, is_save=False)  # Unsafe marble at position 15
+            ])
+        ],
+        list_card_draw=GameState.LIST_CARD.copy(),
+        list_card_discard=[],
+        card_active=None
+    )
 
+    # Initialize the Dog game server
+    game_server = Dog()
+    game_server.set_state(game_state)
+
+    # Test cases for collision detection
+    # Case 1: Collision with an unsafe marble
+    assert game_server._is_collision(5) is True, "Expected collision with marble at position 5"
+
+    # Case 2: No collision with a safe marble
+    assert game_server._is_collision(10) is False, "Expected no collision with safe marble at position 10"
+
+    # Case 3: Collision with another unsafe marble
+    assert game_server._is_collision(15) is True, "Expected collision with marble at position 15"
+
+    # Case 4: No collision at an unoccupied position
+    assert game_server._is_collision(20) is False, "Expected no collision at unoccupied position 20"
 
