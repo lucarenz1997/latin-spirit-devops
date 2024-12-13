@@ -776,7 +776,7 @@ class TestDogBenchmark:
         assert len(self.game_server._state.list_player[0].list_card) == 0, \
             f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
 
-        def test_joker_transformation_actions(self):
+    def test_joker_transformation_actions(self):
             # Setup a state where a player has a Joker card
             game_state = GameState(
                 cnt_player=4,
