@@ -8,6 +8,10 @@ jobs:
     steps:
       - name: Get code
         uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12.0'
       - name: Install pylint and mypy
         run: pip install pylint mypy
       - name: Run pylint on dog.py
@@ -23,11 +27,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      - name: Print working directory
-        run: pwd
-
-      - name: List files in the current directory
-        run: ls -la
       - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
