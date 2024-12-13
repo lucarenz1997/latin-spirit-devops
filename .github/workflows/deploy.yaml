@@ -33,22 +33,14 @@ jobs:
       - name: Authenticate Google Cloud
         uses: google-github-actions/auth@v2
         with:
-          service_account: "418801320409-compute@developer.gserviceaccount.com"
-          project_id: "devops-team-15-124368"
-          workload_identity_provider: "projects/418801320409/locations/global/workloadIdentityPools/github/providers/my-repo"
+          service_account: ${{secrets.SERVICE_ACCOUNT}}
+          project_id: ${{ secrets.PROJECT_ID }}
+          workload_identity_provider: ${{secrets.WORKLOAD_ID_PROVIDER}}
       - name: Set up Google Cloud SDK
         run: |
           gcloud config set project ${{ secrets.PROJECT_ID }}
           gcloud config set compute/zone ${{ secrets.ZONE }}
           gcloud config set run/region europe-west6
-      - name: List files recursively
-        run: find . -type f
-      - name: Print GitHub workspace path
-        run: echo "Workspace path is $GITHUB_WORKSPACE"
-      - name: List contents of GitHub workspace
-        run: ls -la $GITHUB_WORKSPACE
-      - name: Check detailed contents recursively in workspace
-        run: find $GITHUB_WORKSPACE -type f
       - name: Build and Deploy to Cloud Run
         run: |
           gcloud run deploy game-server-service-from-github-action --port 8080 --source . --allow-unauthenticated

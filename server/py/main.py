@@ -259,6 +259,7 @@ async def uno_random_player_ws(websocket: WebSocket):
 
 @app.get("/dog/simulation/", response_class=HTMLResponse)
 async def dog_simulation(request: Request):
+    print("dog_simulation")
     return templates.TemplateResponse("game/dog/simulation.html", {"request": request})
 
 
