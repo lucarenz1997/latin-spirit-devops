@@ -776,6 +776,34 @@ class TestDogBenchmark:
         assert len(self.game_server._state.list_player[0].list_card) == 0, \
             f'Expected active player to have 0 cards, got {len(self.game_server._state.list_player[0].list_card)}'
 
+        def test_joker_transformation_actions(self):
+            # Setup a state where a player has a Joker card
+            game_state = GameState(
+                cnt_player=4,
+                phase=GamePhase.RUNNING,
+                cnt_round=1,
+                bool_card_exchanged=True,
+                idx_player_started=0,
+                idx_player_active=0,
+                list_player=[
+                    PlayerState(
+                        name='Player 1',
+                        list_card=[Card(rank='JKR', suit='')],
+                        list_marble=[Marble(pos=1, is_save=False)]
+                    ),
+                    PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                    PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                    PlayerState(name='Player 4', list_card=[], list_marble=[])
+                ],
+                list_card_draw=GameState.LIST_CARD.copy(),
+                list_card_discard=[],
+                card_active=None
+            )
+            self.game_server.set_state(game_state)
+            actions = self.game_server.get_list_action()
+            # Joker should transform into multiple possible cards
+            assert any(act.card_swap for act in actions), "Expected joker to produce actions with card_swap options"
+
 # --- end of tests ---
 
 
