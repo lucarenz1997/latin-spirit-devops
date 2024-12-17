@@ -1028,4 +1028,116 @@ class TestDogBenchmark:
         result = self.game_server._is_valid_move_in_final_area(pos_from=68, pos_to=69, marbles=game_state.list_player[2].list_marble, final_area_start=68, final_area_end=71)
         assert result is True, f'4 Expected True, got {result}'
 
+    def test_joker_transformation_actions(self):
+        # Setup a state where a player has a Joker card
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(rank='JKR', suit='')],
+                    list_marble=[Marble(pos=1, is_save=False)]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+        actions = self.game_server.get_list_action()
+        # Joker should transform into multiple possible cards
+        assert any(act.card_swap for act in actions), "Expected joker to produce actions with card_swap options"
+
+    def test_refresh_deck_when_draw_empty(self):
+        # Create a state with a very limited draw pile
+        # Let's say only 2 cards left in draw pile
+        limited_draw_pile = GameState.LIST_CARD[:2]
+        discard_pile = [Card(suit='♥', rank='2'), Card(suit='♣', rank='K')]  # Some discard cards
+
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(name='Player 1', list_card=[], list_marble=[Marble(pos=1, is_save=False)]),
+                PlayerState(name='Player 2', list_card=[], list_marble=[]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=limited_draw_pile,
+            list_card_discard=discard_pile,
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # Apply None action 4 times to simulate end of a round - should trigger new dealing
+        for _ in range(4):
+            self.game_server.apply_action(None)
+
+        # At this point, the game tries to deal new cards. Since the draw pile is almost empty,
+        # it should trigger a deck refresh using the discarded cards.
+        # After refresh, the draw pile should not be empty.
+        assert len(self.game_server.get_state().list_card_draw) > 2, \
+            "Expected the draw pile to be replenished and shuffled after it became empty."
+
+        # Also verify that bool_card_exchanged is reset after new round
+        assert not self.game_server.get_state().bool_card_exchanged, \
+            "Expected bool_card_exchanged to be reset after the deck refresh and new dealing."
+
+    def test_card_7_multiple_partial_moves(self):
+        # Setup a game state where the active player has a 7 card and a marble on the board.
+        # We'll simulate partial moves: first move 3 steps, then 4 steps, totaling 7.
+        game_state = GameState(
+            cnt_player=4,
+            phase=GamePhase.RUNNING,
+            cnt_round=1,
+            bool_card_exchanged=True,
+            idx_player_started=0,
+            idx_player_active=0,
+            list_player=[
+                PlayerState(
+                    name='Player 1',
+                    list_card=[Card(suit='x', rank='7')],
+                    list_marble=[Marble(pos=10, is_save=False)]
+                ),
+                PlayerState(name='Player 2', list_card=[], list_marble=[Marble(pos=15, is_save=False)]),
+                PlayerState(name='Player 3', list_card=[], list_marble=[]),
+                PlayerState(name='Player 4', list_card=[], list_marble=[])
+            ],
+            list_card_draw=GameState.LIST_CARD.copy(),
+            list_card_discard=[],
+            card_active=None
+        )
+        self.game_server.set_state(game_state)
+
+        # First partial move: Move the marble 3 steps forward with 7 card
+        action_3_steps = Action(card=Card(suit='x', rank='7'), pos_from=10, pos_to=13)
+        self.game_server.apply_action(action_3_steps)
+
+        # At this point, card_active should still be '7', since total 7 steps not yet completed
+        assert self.game_server.get_state().card_active is not None, "Expected card_active to remain set after partial 7 steps."
+        assert self.game_server.get_state().card_active.rank == '7', "Expected card_active to be the 7 card after partial move."
+        assert self.game_server._state.idx_player_active == 0, "Expected to remain the same player's turn after partial move."
+
+        # Second partial move: Move the same marble 4 more steps forward
+        action_4_steps = Action(card=Card(suit='x', rank='7'), pos_from=13, pos_to=17)
+        self.game_server.apply_action(action_4_steps)
+
+        # Now total 7 steps have been completed. The card_active should reset and turn should pass to next player.
+        assert self.game_server.get_state().card_active is None, "Expected card_active to reset after completing all 7 steps."
+        assert self.game_server._state.idx_player_active == 1, "Expected turn to move to next player after completing all 7 steps."
+        assert self.game_server._state.list_player[0].list_marble[
+                   0].pos == 17, "Expected the marble to be moved to position 17."
+
 # --- end of tests ---
