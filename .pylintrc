@@ -7,6 +7,9 @@ disable=missing-module-docstring,
         missing-function-docstring,
         too-many-arguments,
         too-many-positional-arguments
+        too-many-instance-attributes,
+        too-few-public-methods
+        missing-function-docstring,
 
 [FORMAT]
 max-line-length=120
