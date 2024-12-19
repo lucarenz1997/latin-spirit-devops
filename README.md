@@ -69,3 +69,11 @@ uvicorn server.py.main:app --reload
 start chrome http://localhost:8000
 ````
 </details>
+
+### Benchmark Results
+
+With date of 19th December 2024, the resutls of the benchmark are as follows:
+
+![Benchmark Results](benchmark_result.png)
+
+We included this image of the benchmark results to show the performance of our scripts as we have noticed that depending on the system the tests **100** and **102** can fail. We noticed this in the shared image from [Revolitics Benchmark Statistics](https://wiki.revolytics.com/569036bb406d40bda8d377bdb608b481/)
